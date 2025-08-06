@@ -3,64 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои группы</title>
+    <title>My Group Expenses</title>
     <link href="css/styles.css" rel="stylesheet" type="text/css">
 </head>
 <body>
     <div class="container">
-        <h1 id="main-title">Мои группы</h1>
-        
-        <div id="loading">
+        <button id="logout-btn" class="hidden">Выйти</button>
+        <h1 id="main-title">My Group Expenses</h1>
+
+        <div id="login-container">
+            <form id="login-form" class="login-form">
+                <h2>Login</h2>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Confirm</button>
+                <p id="login-error" style="color: #ef4444; text-align: center;"></p>
+            </form>
+        </div>
+
+        <div id="loading" class="hidden">
             <div class="loading-spinner"></div>
         </div>
 
-        <div id="groups-container">
-            </div>
-
-        <div id="error-message" class="hidden">
-            </div>
-        
+        <div id="groups-container" class="hidden"></div>
+        <div id="error-message" class="hidden"></div>
         <div id="expense-details" class="hidden"></div>
         
     </div>
 
     <script>
-        // ВАЖНО: Замените этот токен на ваш актуальный Bearer Token
-        const USER_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTI3MmE3M2IxNGNhOTNhNGU4YjIyZiIsImlhdCI6MTc1NDUxMDkyNCwiZXhwIjoxNzU0NTE0NTI0fQ.s1cej-V9IbEZBud-k-v8b-wcYYWsMMTtOGHTzM1SUg4';
         const API_URL = 'http://localhost:3000';
 
+        const loginContainer = document.getElementById('login-container');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
         const mainTitle = document.getElementById('main-title');
         const groupsContainer = document.getElementById('groups-container');
         const loadingContainerDiv = document.getElementById('loading');
         const errorMessageDiv = document.getElementById('error-message');
         const expenseDetailsContainer = document.getElementById('expense-details');
+        
+        function toggleUI(isLoggedIn) {
+            if (isLoggedIn) {
+                loginContainer.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                groupsContainer.classList.remove('hidden');
+            } else {
+                loginContainer.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                groupsContainer.classList.add('hidden');
+                expenseDetailsContainer.classList.add('hidden');
+                mainTitle.textContent = 'My Group Expenses';
+                localStorage.removeItem('userToken');
+            }
+        }
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                loginError.textContent = '';
+                
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Ошибка входа');
+                }
+                
+                localStorage.setItem('userToken', data.token);
+                toggleUI(true);
+                fetchGroups();
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                loginError.textContent = error.message;
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            toggleUI(false);
+        });
 
         async function fetchGroups() {
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                // Switch UI to login form if no token
+                toggleUI(false);
+                return;
+            }
+
             try {
                 loadingContainerDiv.classList.remove('hidden');
                 errorMessageDiv.classList.add('hidden');
                 groupsContainer.classList.remove('hidden');
                 expenseDetailsContainer.classList.add('hidden');
-                mainTitle.textContent = 'Мои группы';
+                mainTitle.textContent = 'My Groups';
 
                 const response = await fetch(`${API_URL}/api/groups`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${USER_TOKEN}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.message || 'Ошибка при получении групп');
+                    throw new Error(errorData.message || 'Error getting groups');
                 }
 
                 const groups = await response.json();
                 loadingContainerDiv.classList.add('hidden');
 
                 if (groups.length === 0) {
-                    groupsContainer.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.125rem;">Вы пока не состоите ни в одной группе.</p>';
+                    groupsContainer.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.125rem;">You don`t belong to any group yet.</p>';
                     return;
                 }
 
@@ -70,13 +135,13 @@
                     groupCard.className = 'group-card';
                     groupCard.innerHTML = `
                         <h2>${group.name}</h2>
-                        <div class="group-id">ID группы: <span>${group._id}</span></div>
-                        <p>Участники:</p>
+                        <div class="group-id">Group ID: <span>${group._id}</span></div>
+                        <p>Members:</p>
                         <ul>
                             ${group.members.map(member => `<li>${member.username} (${member.email})</li>`).join('')}
                         </ul>
                     `;
-                    groupCard.addEventListener('click', () => showGroupExpenses(group._id, group.name));
+                    groupCard.addEventListener('click', () => showGroupExpenses(group._id, group.name, token));
                     groupsContainer.appendChild(groupCard);
                 });
 
@@ -84,17 +149,17 @@
                 console.error('Ошибка:', error);
                 loadingContainerDiv.classList.add('hidden');
                 errorMessageDiv.classList.remove('hidden');
-                errorMessageDiv.textContent = `Ошибка: ${error.message}`;
+                errorMessageDiv.textContent = `Error: ${error.message}`;
             }
         }
 
-        async function showGroupExpenses(groupId, groupName) {
+        async function showGroupExpenses(groupId, groupName, token) {
             try {
                 groupsContainer.classList.add('hidden');
                 expenseDetailsContainer.classList.add('hidden');
                 loadingContainerDiv.classList.remove('hidden');
                 errorMessageDiv.classList.add('hidden');
-                mainTitle.textContent = `Расходы в группе "${groupName}"`;
+                mainTitle.textContent = `"${groupName}" Group Expenses`;
 
                 // Fetch expenses and balances in parallel
                 const [expensesResponse, balancesResponse] = await Promise.all([
@@ -102,21 +167,21 @@
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${USER_TOKEN}`
+                            'Authorization': `Bearer ${token}`
                         }
                     }),
                     fetch(`${API_URL}/api/groups/${groupId}/balances`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${USER_TOKEN}`
+                            'Authorization': `Bearer ${token}`
                         }
                     })
                 ]);
 
                 if (!expensesResponse.ok || !balancesResponse.ok) {
                     const errorData = await (expensesResponse.ok ? balancesResponse : expensesResponse).json();
-                    throw new Error(errorData.message || 'Ошибка при получении данных о расходах');
+                    throw new Error(errorData.message || 'Error getting expenses data');
                 }
 
                 const expenses = await expensesResponse.json();
@@ -126,28 +191,27 @@
                 loadingContainerDiv.classList.add('hidden');
                 expenseDetailsContainer.classList.remove('hidden');
 
-                // Генерируем HTML-разметку
                 const expensesHtml = expenses.map(expense => `
                     <li class="expense-item">
-                        <strong>${expense.description}</strong>: ${expense.amount} hrn., заплатил ${expense.payer.username}
+                        <strong>${expense.description}</strong>: ${expense.amount} hrn., paid ${expense.payer.username}
                     </li>
                 `).join('');
 
                 const transactionsHtml = transactions.map(t => `
                     <li class="transaction-item">
-                        ${t.from.username} должен ${t.to.username} ${t.amount.toFixed(2)} hrn.
+                        ${t.from.username} owes ${t.to.username} ${t.amount.toFixed(2)} hrn.
                     </li>
                 `).join('');
                 
                 expenseDetailsContainer.innerHTML = `
-                    <button id="back-to-groups-btn">← Назад к группам</button>
-                    <h3>Список расходов</h3>
-                    <ul>${expensesHtml || '<li>Пока нет расходов.</li>'}</ul>
-                    <h3>Кто кому должен</h3>
-                    <ul>${transactionsHtml || '<li>Все счета сбалансированы.</li>'}</ul>
+                    <button id="back-to-groups-btn">← Back to groups</button>
+                    <h3>Expenses list</h3>
+                    <ul>${expensesHtml || '<li>No expenses yet.</li>'}</ul>
+                    <h3>Who owes who</h3>
+                    <ul>${transactionsHtml || '<li>All even.</li>'}</ul>
                 `;
                 
-                // Добавляем обработчик для кнопки "Назад"
+                // Back button eventlistener
                 document.getElementById('back-to-groups-btn').addEventListener('click', fetchGroups);
 
             } catch (error) {
@@ -155,13 +219,21 @@
                 loadingContainerDiv.classList.add('hidden');
                 errorMessageDiv.classList.remove('hidden');
                 errorMessageDiv.textContent = `Ошибка: ${error.message}`;
-                expenseDetailsContainer.innerHTML = `<button id="back-to-groups-btn">← Назад к группам</button>`;
+                expenseDetailsContainer.innerHTML = `<button id="back-to-groups-btn">← Back to groups</button>`;
                 document.getElementById('back-to-groups-btn').addEventListener('click', fetchGroups);
             }
         }
 
-        // Запускаем функцию при загрузке страницы
-        document.addEventListener('DOMContentLoaded', fetchGroups);
+        // Token exist check
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('userToken');
+            if (token) {
+                toggleUI(true);
+                fetchGroups();
+            } else {
+                toggleUI(false);
+            }
+        });
     </script>
 </body>
 </html>
