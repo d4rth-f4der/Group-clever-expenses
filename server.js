@@ -149,7 +149,7 @@ app.post('/api/groups/:groupId/expenses', protect, async (req, res) => {
         const group = await Group.findById(groupId);
 
         if (!group) return res.status(404).json({ message: 'Group not found' });
-        if (!group.members.includes(req.user._id)) return res.status(403).json({ message: 'Not authorised to add expenses to this group' });
+        if (!group.members.map(String).includes(String(req.user._id))) return res.status(403).json({ message: 'Not authorised to add expenses to this group' });
         if (!group.members.map(String).includes(String(payer))) return res.status(400).json({ message: 'payer must be member of this group' });
 
         const invalidParticipants = participants.filter(pId => !group.members.map(String).includes(String(pId)));
@@ -178,10 +178,6 @@ app.post('/api/groups/:groupId/expenses', protect, async (req, res) => {
         console.error('Add expense:', err);
         return res.status(500).json({ message: 'Server error on attempt to add expense' });
     }
-});
-
-app.get('/', (req, res) => {
-    res.send('Group Clever Expenses API is running!');
 });
 
 app.get('/api/users/profile', protect, async (req, res) => {
@@ -223,6 +219,104 @@ app.get('/api/groups/:groupId/expenses', protect, async (req, res) => {
         console.error('Fetch expenses error:', err);
         return res.status(500).json({ message: 'Server error on attempt to fetch expenses' });
     }
+});
+
+app.get('/api/groups/:groupId/balances', protect, async (req, res) => {
+    const { groupId } = req.params;
+
+    try {
+        const group = await Group.findById(groupId).populate('members', 'username email');
+        
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+    
+        const isMember = group.members.map(m => String(m._id)).includes(String(req.user._id));
+        if (!isMember) {
+            return res.status(403).json({ message: 'Not authorized to view balances of this group' });
+        }
+
+        const expenses = await Expense.find({ group: groupId })
+            .populate('payer', 'username email')
+            .populate('participants.user', 'username email');
+
+        const balances = new Map();
+        group.members.forEach(member => {
+            balances.set(String(member._id), 0);
+        });
+
+        expenses.forEach(expense => {
+            const payerId = String(expense.payer._id);
+            const amount = expense.amount;
+            const numParticipants = expense.participants.length;
+
+            balances.set(payerId, balances.get(payerId) + amount);
+
+            const share = amount / numParticipants;
+
+            expense.participants.forEach(participant => {
+                const participantId = String(participant.user._id);
+                balances.set(participantId, balances.get(participantId) - share);
+            });
+        });
+
+        const debts = [];
+        const users = Array.from(balances.keys());
+        const tempBalances = new Map(balances);
+
+        for (let i = 0; i < users.length; i++) {
+            for (let j = i + 1; j < users.length; j++) {
+                const user1Id = users[i];
+                let balance1 = tempBalances.get(user1Id);
+                const user2Id = users[j];
+                let balance2 = tempBalances.get(user2Id);
+
+                if (balance1 > 0 && balance2 < 0) {
+                    const amountToSettle = Math.min(balance1, Math.abs(balance2));
+                    if (amountToSettle > 0.01) {
+                        debts.push({
+                            from: group.members.find(m => String(m._id) === user2Id),
+                            to: group.members.find(m => String(m._id) === user1Id),
+                            amount: parseFloat(amountToSettle.toFixed(2))
+                        });
+                        tempBalances.set(user1Id, balance1 - amountToSettle);
+                        tempBalances.set(user2Id, balance2 + amountToSettle);
+                    }
+                } else if (balance2 > 0 && balance1 < 0) {
+                    const amountToSettle = Math.min(balance2, Math.abs(balance1));
+                    if (amountToSettle > 0.01) {
+                        debts.push({
+                            from: group.members.find(m => String(m._id) === user1Id),
+                            to: group.members.find(m => String(m._id) === user2Id),
+                            amount: parseFloat(amountToSettle.toFixed(2))
+                        });
+                        tempBalances.set(user2Id, balance2 - amountToSettle);
+                        tempBalances.set(user1Id, balance1 + amountToSettle);
+                    }
+                }
+            }
+        }
+
+        const finalBalances = Array.from(balances.entries()).map(([userId, balance]) => ({
+            user: group.members.find(m => String(m._id) === userId),
+            balance: parseFloat(balance.toFixed(2))
+        }));
+
+        return res.status(200).json({
+            group: {
+                _id: group._id,
+                name: group.name,
+                members: group.members,
+            },
+            summary: finalBalances,
+            debts: debts
+        });
+    } catch (err) {
+        console.error('Fetch balances error:', err);
+        return res.status(500).json({ message: 'Server error on fetching balances' });
+    }
+});
+
+app.get('/', (req, res) => {
+    res.send('Group Clever Expenses API is running!');
 });
 
 const listener = app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
