@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const morgan = require('morgan');
 
 // require('crypto').randomBytes(32).toString('hex') - для генерации JWS_SECRET
 
@@ -13,6 +14,7 @@ const User = require('./models/user');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('MongoDB connected...'))
