@@ -18,6 +18,7 @@ const { protect } = require('./middleware/authMiddleware.js');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+app.use(express.static('public'));
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('MongoDB connected...'))
@@ -316,7 +317,8 @@ app.get('/api/groups/:groupId/balances', protect, async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('Group Clever Expenses API is running!');
+    // res.send('Group Clever Expenses API is running!');
+    res.sendFile(__dirname + '/views/index.html');
 });
 
 const listener = app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));

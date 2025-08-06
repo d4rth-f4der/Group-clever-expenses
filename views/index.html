@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои группы</title>
+    <link href="css/styles.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <div class="container">
+        <h1 id="main-title">Мои группы</h1>
+        
+        <div id="loading">
+            <div class="loading-spinner"></div>
+        </div>
+
+        <div id="groups-container">
+            </div>
+
+        <div id="error-message" class="hidden">
+            </div>
+        
+        <div id="expense-details" class="hidden"></div>
+        
+    </div>
+
+    <script>
+        // ВАЖНО: Замените этот токен на ваш актуальный Bearer Token
+        const USER_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4OTI3MmE3M2IxNGNhOTNhNGU4YjIyZiIsImlhdCI6MTc1NDUxMDkyNCwiZXhwIjoxNzU0NTE0NTI0fQ.s1cej-V9IbEZBud-k-v8b-wcYYWsMMTtOGHTzM1SUg4';
+        const API_URL = 'http://localhost:3000';
+
+        const mainTitle = document.getElementById('main-title');
+        const groupsContainer = document.getElementById('groups-container');
+        const loadingContainerDiv = document.getElementById('loading');
+        const errorMessageDiv = document.getElementById('error-message');
+        const expenseDetailsContainer = document.getElementById('expense-details');
+
+        async function fetchGroups() {
+            try {
+                loadingContainerDiv.classList.remove('hidden');
+                errorMessageDiv.classList.add('hidden');
+                groupsContainer.classList.remove('hidden');
+                expenseDetailsContainer.classList.add('hidden');
+                mainTitle.textContent = 'Мои группы';
+
+                const response = await fetch(`${API_URL}/api/groups`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${USER_TOKEN}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Ошибка при получении групп');
+                }
+
+                const groups = await response.json();
+                loadingContainerDiv.classList.add('hidden');
+
+                if (groups.length === 0) {
+                    groupsContainer.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.125rem;">Вы пока не состоите ни в одной группе.</p>';
+                    return;
+                }
+
+                groupsContainer.innerHTML = '';
+                groups.forEach(group => {
+                    const groupCard = document.createElement('div');
+                    groupCard.className = 'group-card';
+                    groupCard.innerHTML = `
+                        <h2>${group.name}</h2>
+                        <div class="group-id">ID группы: <span>${group._id}</span></div>
+                        <p>Участники:</p>
+                        <ul>
+                            ${group.members.map(member => `<li>${member.username} (${member.email})</li>`).join('')}
+                        </ul>
+                    `;
+                    groupCard.addEventListener('click', () => showGroupExpenses(group._id, group.name));
+                    groupsContainer.appendChild(groupCard);
+                });
+
+            } catch (error) {
+                console.error('Ошибка:', error);
+                loadingContainerDiv.classList.add('hidden');
+                errorMessageDiv.classList.remove('hidden');
+                errorMessageDiv.textContent = `Ошибка: ${error.message}`;
+            }
+        }
+
+        async function showGroupExpenses(groupId, groupName) {
+            try {
+                groupsContainer.classList.add('hidden');
+                expenseDetailsContainer.classList.add('hidden');
+                loadingContainerDiv.classList.remove('hidden');
+                errorMessageDiv.classList.add('hidden');
+                mainTitle.textContent = `Расходы в группе "${groupName}"`;
+
+                // Fetch expenses and balances in parallel
+                const [expensesResponse, balancesResponse] = await Promise.all([
+                    fetch(`${API_URL}/api/groups/${groupId}/expenses`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${USER_TOKEN}`
+                        }
+                    }),
+                    fetch(`${API_URL}/api/groups/${groupId}/balances`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${USER_TOKEN}`
+                        }
+                    })
+                ]);
+
+                if (!expensesResponse.ok || !balancesResponse.ok) {
+                    const errorData = await (expensesResponse.ok ? balancesResponse : expensesResponse).json();
+                    throw new Error(errorData.message || 'Ошибка при получении данных о расходах');
+                }
+
+                const expenses = await expensesResponse.json();
+                const balancesData = await balancesResponse.json();
+                const transactions = balancesData.debts;
+
+                loadingContainerDiv.classList.add('hidden');
+                expenseDetailsContainer.classList.remove('hidden');
+
+                // Генерируем HTML-разметку
+                const expensesHtml = expenses.map(expense => `
+                    <li class="expense-item">
+                        <strong>${expense.description}</strong>: ${expense.amount} hrn., заплатил ${expense.payer.username}
+                    </li>
+                `).join('');
+
+                const transactionsHtml = transactions.map(t => `
+                    <li class="transaction-item">
+                        ${t.from.username} должен ${t.to.username} ${t.amount.toFixed(2)} hrn.
+                    </li>
+                `).join('');
+                
+                expenseDetailsContainer.innerHTML = `
+                    <button id="back-to-groups-btn">← Назад к группам</button>
+                    <h3>Список расходов</h3>
+                    <ul>${expensesHtml || '<li>Пока нет расходов.</li>'}</ul>
+                    <h3>Кто кому должен</h3>
+                    <ul>${transactionsHtml || '<li>Все счета сбалансированы.</li>'}</ul>
+                `;
+                
+                // Добавляем обработчик для кнопки "Назад"
+                document.getElementById('back-to-groups-btn').addEventListener('click', fetchGroups);
+
+            } catch (error) {
+                console.error('Ошибка:', error);
+                loadingContainerDiv.classList.add('hidden');
+                errorMessageDiv.classList.remove('hidden');
+                errorMessageDiv.textContent = `Ошибка: ${error.message}`;
+                expenseDetailsContainer.innerHTML = `<button id="back-to-groups-btn">← Назад к группам</button>`;
+                document.getElementById('back-to-groups-btn').addEventListener('click', fetchGroups);
+            }
+        }
+
+        // Запускаем функцию при загрузке страницы
+        document.addEventListener('DOMContentLoaded', fetchGroups);
+    </script>
+</body>
+</html>

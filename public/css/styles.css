@@ -1,0 +1,174 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6;
+    padding: 24px;
+    margin: 0;
+}
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+h1 {
+    font-size: 2.25rem; /* 36px */
+    font-weight: 700;
+    text-align: center;
+    color: #1f2937;
+    margin-bottom: 32px;
+}
+#loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 96px;
+}
+.loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #3b82f6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+#groups-container {
+    display: grid;
+    gap: 24px;
+}
+/* Адаптивный дизайн для сетки */
+@media (min-width: 768px) {
+    #groups-container {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (min-width: 1024px) {
+    #groups-container {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+.group-card {
+    background-color: #ffffff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    cursor: pointer; /* Добавили курсор, чтобы было понятно, что карточка кликабельна */
+}
+.group-card:hover {
+    transform: scale(1.05);
+}
+.group-card h2 {
+    font-size: 1.5rem; /* 24px */
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+.group-card .group-id {
+    font-size: 0.875rem; /* 14px */
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+.group-card .group-id span {
+    font-family: monospace;
+}
+.group-card p {
+    font-size: 0.875rem; /* 14px */
+    color: #4b5563;
+    margin-bottom: 8px;
+}
+.group-card ul {
+    list-style-type: disc;
+    list-style-position: inside;
+    font-size: 0.875rem;
+    color: #4b5563;
+    margin-left: 16px;
+}
+.group-card ul li {
+    margin-bottom: 4px;
+}
+#error-message {
+    display: none;
+    margin-top: 32px;
+    text-align: center;
+    color: #ef4444; /* Сделаем ошибку красной */
+    font-weight: 500;
+    padding: 16px;
+    border: 1px solid #fca5a5; /* Добавим красную рамку */
+    background-color: #fef2f2;
+    border-radius: 8px;
+}
+/* Мы добавили !important, чтобы гарантированно скрыть элемент */
+.hidden {
+    display: none !important;
+}
+
+/* Новые стили для страницы с расходами */
+#expense-details {
+    padding: 24px;
+    border-radius: 12px;
+    background-color: #f9fafb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+#expense-details h2 {
+    font-size: 2rem;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+#expense-details h3 {
+    font-size: 1.25rem;
+    color: #374151;
+    margin-top: 24px;
+    margin-bottom: 8px;
+}
+
+#expense-details ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#expense-details ul li {
+    background-color: #ffffff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+}
+
+#expense-details .expense-item strong {
+    font-weight: 600;
+}
+
+#expense-details .transaction-item {
+    background-color: #d1fae5; /* Зеленый фон для транзакций */
+    border-color: #10b981;
+}
+
+#back-to-groups-btn {
+    background-color: #4f46e5;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+    margin-bottom: 24px;
+}
+
+#back-to-groups-btn:hover {
+    background-color: #4338ca;
+}
