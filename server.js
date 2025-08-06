@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
 const User = require('./models/user');
+const { protect } = require('./middleware/authMiddleware.js');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -91,6 +92,14 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/', (req, res) => {
     res.send('Group Clever Expenses API is running!');
+});
+
+app.get('/api/users/profile', protect, async (req, res) => { // обьясни синтаксис
+    res.json({
+        _id: req.user._id,
+        username: req.user.username,
+        email: req.user.email
+    });
 });
 
 const listener = app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
