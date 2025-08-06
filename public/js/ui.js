@@ -10,7 +10,7 @@ const DOM = {
     expenseDetailsContainer: document.getElementById('expense-details')
 };
 
-export function toggleUI(isLoggedIn) { // что значит export function? я вроде и без export раньше подвязывал в index html через script src=""
+export function toggleUI(isLoggedIn) {
     if (isLoggedIn) {
         DOM.loginContainer.classList.add('hidden');
         DOM.logoutBtn.classList.remove('hidden');
@@ -31,7 +31,6 @@ export function toggleLoading(isLoading) {
         DOM.expenseDetailsContainer.classList.add('hidden');
     } else {
         DOM.loadingContainer.classList.add('hidden');
-        DOM.groupsContainer.classList.remove('hidden');
     }
 }
 
@@ -43,10 +42,11 @@ export function displayError(message) {
     DOM.expenseDetailsContainer.classList.add('hidden');
 }
 
-export function renderGroups(groups, onGroupClick) {
+export function renderGroups(groups) {
     DOM.mainTitle.textContent = 'My Group Expenses';
     DOM.groupsContainer.innerHTML = '';
     DOM.groupsContainer.classList.remove('hidden');
+    DOM.expenseDetailsContainer.classList.add('hidden');
 
     if (groups.length === 0) {
         DOM.groupsContainer.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.125rem;">You don`t belong to any group yet.</p>';
@@ -64,12 +64,12 @@ export function renderGroups(groups, onGroupClick) {
                 ${group.members.map(member => `<li>${member.username} (${member.email})</li>`).join('')}
             </ul>
         `;
-        groupCard.addEventListener('click', () => onGroupClick(group._id, group.name));
+
         DOM.groupsContainer.appendChild(groupCard);
     });
 }
 
-export function renderGroupDetails(groupName, expenses, transactions, onBackClick) {
+export function renderGroupDetails(groupName, expenses, transactions) {
     DOM.mainTitle.textContent = `"${groupName}" Group Expenses`;
     DOM.groupsContainer.classList.add('hidden');
     DOM.expenseDetailsContainer.classList.remove('hidden');
@@ -94,7 +94,7 @@ export function renderGroupDetails(groupName, expenses, transactions, onBackClic
         <ul>${transactionsHtml || '<li>All even.</li>'}</ul>
     `;
     
-    document.getElementById('back-to-groups-btn').addEventListener('click', onBackClick);
+    document.getElementById('back-to-groups-btn').addEventListener('click', () => history.back());
 }
 
-export { DOM }; // это что значит?
+export { DOM };
