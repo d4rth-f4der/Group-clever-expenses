@@ -132,13 +132,19 @@ app.post('/api/groups', protect, async (req, res) => {
 });
 
 app.post('/api/groups/:groupId/expenses', protect, async (req, res) => {
-    const { description, amount, payer, participants } = req.body;
+    const { description, amount, payer, participants, date } = req.body;
     const { groupId } = req.params;
 
     if (!description || amount <= 0 || !payer || !participants || !Array.isArray(participants) || participants.length === 0) {
         // в будущем: Использовать библиотеку для валидации (например, `joi` или `express-validator`)
         return res.status(400).json({ message: 'Mandatory: description, amount, payer, participant(s)' });
     }
+
+    let expenseDate = date ? new Date(date) : undefined;
+    if (date && (expenseDate.toString() === 'Invalid Date')) {
+        return res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD (or YYYY-MM-DDTHH:MM:SSZ).' });
+    }
+
     try {
         const group = await Group.findById(groupId);
 
@@ -154,7 +160,8 @@ app.post('/api/groups/:groupId/expenses', protect, async (req, res) => {
             amount,
             group: groupId,
             payer,
-            participants: participants.map(pId => ({ user: pId }))
+            participants: participants.map(pId => ({ user: pId })),
+            date: expenseDate
         });
 
         return res.status(201).json({
@@ -203,7 +210,7 @@ app.get('/api/groups/:groupId/expenses', protect, async (req, res) => {
 
         if (!group) return res.status(404).json({ message: 'Group not found' });
 
-        if (!group.members.includes(req.user._id)) {
+        if (!group.members.map(String).includes(String(req.user._id))) {
             return res.status(403).json({ message: 'Not authorized to view this group expenses' });
         }
 
