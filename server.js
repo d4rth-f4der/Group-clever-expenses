@@ -10,7 +10,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
-const User = require('./models/user');
+const User = require('./models/user.js');
+const Group = require('./models/group.js')
 const { protect } = require('./middleware/authMiddleware.js');
 
 app.use(express.json());
@@ -90,16 +91,65 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+app.post('/api/groups', protect, async (req, res) => {
+    const { name, members } = req.body;
+
+    if (!name || !members || !Array.isArray(members) || members.length === 0) {
+        return res.status(400).json({ message: "Provide group name and at least one member" });
+    }
+
+    const uniqueMembers = new Set(members.map(String));
+    uniqueMembers.add(String(req.user._id));
+
+    const existingMembers = await User.find({ '_id': { $in: Array.from(uniqueMembers) } }).select('_id');
+    if (existingMembers.length !== uniqueMembers.size) {
+        return res.status(400).json({ message: "Some of provided member IDs invalid" });
+    }
+    const validMemberIds = existingMembers.map(member => member._id);
+
+    try {
+        const group = await Group.create({
+            name,
+            members: validMemberIds,
+            admin: req.user._id
+        });
+
+        res.status(201).json({
+            _id: group._id,
+            name: group.name,
+            members: group.members,
+            admin: group.admin,
+            message: `Group '${name}' successfully created`
+        });
+    } catch (error) {
+        console.error('Group creation error:', error);
+        if (error.code === 11000) {
+            return res.status(409).json({ message: 'Group name already exists' });
+        }
+        return res.status(500).json({ message: 'Server error during group creation' });
+    }
+});
+
 app.get('/', (req, res) => {
     res.send('Group Clever Expenses API is running!');
 });
 
-app.get('/api/users/profile', protect, async (req, res) => { // обьясни синтаксис
+app.get('/api/users/profile', protect, async (req, res) => {
     res.json({
         _id: req.user._id,
         username: req.user.username,
         email: req.user.email
     });
+});
+
+app.get('/api/groups', protect, async (req, res) => {
+    try {
+        const groups = await Group.find({ members: req.user._id }).populate('members', 'username email');
+        return res.status(200).json(groups);
+    } catch (error) {
+        console.error('Fetch groups error:', error);
+        return res.status(500).json({ message: 'Server error fetching groups' });
+    }
 });
 
 const listener = app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
