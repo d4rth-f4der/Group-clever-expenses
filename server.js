@@ -11,7 +11,8 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
 const User = require('./models/user.js');
-const Group = require('./models/group.js')
+const Group = require('./models/group.js');
+const Expense = require('./models/expense.js');
 const { protect } = require('./middleware/authMiddleware.js');
 
 app.use(express.json());
@@ -130,6 +131,48 @@ app.post('/api/groups', protect, async (req, res) => {
     }
 });
 
+app.post('/api/groups/:groupId/expenses', protect, async (req, res) => {
+    const { description, amount, payer, participants } = req.body;
+    const { groupId } = req.params;
+
+    if (!description || amount <= 0 || !payer || !participants || !Array.isArray(participants) || participants.length === 0) {
+        // в будущем: Использовать библиотеку для валидации (например, `joi` или `express-validator`)
+        return res.status(400).json({ message: 'Mandatory: description, amount, payer, participant(s)' });
+    }
+    try {
+        const group = await Group.findById(groupId);
+
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+        if (!group.members.includes(req.user._id)) return res.status(403).json({ message: 'Not authorised to add expenses to this group' });
+        if (!group.members.map(String).includes(String(payer))) return res.status(400).json({ message: 'payer must be member of this group' });
+
+        const invalidParticipants = participants.filter(pId => !group.members.map(String).includes(String(pId)));
+        if (invalidParticipants.length > 0) return res.status(400).json({ message: "some participants aren't in this group" });
+
+        const expense = await Expense.create({
+            description,
+            amount,
+            group: groupId,
+            payer,
+            participants: participants.map(pId => ({ user: pId }))
+        });
+
+        return res.status(201).json({
+            _id: expense._id,
+            description: expense.description,
+            amount: expense.amount,
+            group: expense.group,
+            payer: expense.payer,
+            participants: expense.participants,
+            date: expense.date,
+            message: 'Expense added successfully'
+        });
+    } catch (err) {
+        console.error('Add expense:', err);
+        return res.status(500).json({ message: 'Server error on attempt to add expense' });
+    }
+});
+
 app.get('/', (req, res) => {
     res.send('Group Clever Expenses API is running!');
 });
@@ -149,6 +192,29 @@ app.get('/api/groups', protect, async (req, res) => {
     } catch (error) {
         console.error('Fetch groups error:', error);
         return res.status(500).json({ message: 'Server error fetching groups' });
+    }
+});
+
+app.get('/api/groups/:groupId/expenses', protect, async (req, res) => {
+    const { groupId } = req.params;
+
+    try {
+        const group = await Group.findById(groupId);
+
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+
+        if (!group.members.includes(req.user._id)) {
+            return res.status(403).json({ message: 'Not authorized to view this group expenses' });
+        }
+
+        const expenses = await Expense.find({ group: groupId })
+            .populate('payer', 'username email')
+            .populate('participants.user', 'username email');
+
+        return res.status(200).json(expenses);
+    } catch (err) {
+        console.error('Fetch expenses error:', err);
+        return res.status(500).json({ message: 'Server error on attempt to fetch expenses' });
     }
 });
 
