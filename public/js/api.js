@@ -1,6 +1,6 @@
 const API_URL = '';
 
-export async function apiRequest(endpoint, method = 'GET', body = null) { // что значит возращает promise который разрешается с данными от API? и почему только GET, у нас же и POST есть (логин например)?
+export async function apiRequest(endpoint, method = 'GET', body = null) {
     const token = localStorage.getItem('userToken');
     const headers = {
         'Content-Type': 'application/json'

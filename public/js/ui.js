@@ -7,7 +7,9 @@ const DOM = {
     groupsContainer: document.getElementById('groups-container'),
     loadingContainer: document.getElementById('loading'),
     errorMessage: document.getElementById('error-message'),
-    expenseDetailsContainer: document.getElementById('expense-details')
+    expenseDetailsContainer: document.getElementById('expense-details'),
+    addExpenseModal: document.getElementById('add-expense-modal'),
+    addExpenseForm: document.getElementById('add-expense-form')
 };
 
 export function toggleUI(isLoggedIn) {
@@ -69,6 +71,10 @@ export function renderGroups(groups) {
     });
 }
 
+function renderAddExpenseButton() {
+    return `<button id="add-expense-btn">Add Expense</button>`;
+}
+
 export function renderGroupDetails(groupName, expenses, transactions) {
     DOM.mainTitle.textContent = `"${groupName}" Group Expenses`;
     DOM.groupsContainer.classList.add('hidden');
@@ -76,7 +82,7 @@ export function renderGroupDetails(groupName, expenses, transactions) {
 
     const expensesHtml = expenses.map(expense => `
         <li class="expense-item">
-            <strong>${expense.description}</strong>: ${expense.amount} hrn., paid ${expense.payer.username}
+            <strong>${expense.description}</strong>: ${expense.amount} hrn., paid by ${expense.payer.username}
         </li>
     `).join('');
 
@@ -88,6 +94,7 @@ export function renderGroupDetails(groupName, expenses, transactions) {
     
     DOM.expenseDetailsContainer.innerHTML = `
         <button id="back-to-groups-btn">← Back to groups</button>
+        ${renderAddExpenseButton()}
         <h3>Expenses list</h3>
         <ul>${expensesHtml || '<li>No expenses yet.</li>'}</ul>
         <h3>Who owes who</h3>
