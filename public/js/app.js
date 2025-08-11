@@ -1,5 +1,5 @@
 import { apiRequest } from './api.js';
-import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, renderPayerSelect } from './ui.js';
+import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, renderPayerSelect, renderParticipants } from './ui.js';
 
 let currentGroupMembers = [];
 
@@ -86,10 +86,17 @@ async function handleAddExpense(e) {
     const description = DOM.addExpenseForm.querySelector('#expense-description').value;
     const amount = parseFloat(DOM.addExpenseForm.querySelector('#expense-amount').value);
     const payer = DOM.addExpenseForm.querySelector('#expense-payer').value; 
-    const participants = currentGroupMembers.map(member => member._id);
+    
+    const selectedParticipantsCheckboxes = DOM.participantsContainer.querySelectorAll('input[type="checkbox"]:checked');
+    const participants = Array.from(selectedParticipantsCheckboxes).map(cb => cb.value);
     
     if (!description || isNaN(amount) || amount <= 0) {
         alert('Please enter a valid description and amount.');
+        return;
+    }
+    
+    if (participants.length === 0) {
+        alert('Please select at least one participant.');
         return;
     }
 
@@ -109,7 +116,6 @@ async function handleAddExpense(e) {
         displayError(error.message);
     }
 }
-
 
 async function handleRoute() {
     const token = localStorage.getItem('userToken');
@@ -138,6 +144,7 @@ function initializeApp() {
     DOM.expenseDetailsContainer.addEventListener('click', (e) => {
         if (e.target.id === 'add-expense-btn') {
             renderPayerSelect(currentGroupMembers);
+            renderParticipants(currentGroupMembers);
             toggleModal(true);
         }
     });

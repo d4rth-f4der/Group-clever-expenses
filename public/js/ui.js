@@ -16,6 +16,7 @@ const DOM = {
     cancelExpenseBtn: document.getElementById('cancel-expense-btn'),
 
     payerSelect: document.getElementById('expense-payer'),
+    participantsContainer: document.getElementById('expense-participants'),
 };
 
 export function toggleUI(isLoggedIn) {
@@ -115,6 +116,9 @@ export function renderGroupDetails(groupName, expenses, transactions) {
 export function toggleModal(show) {
     if (show) {
         DOM.addExpenseModal.classList.remove('hidden');
+        if (typeof renderParticipants !== 'undefined') {
+             renderParticipants(currentGroupMembers);
+        }
     } else {
         DOM.addExpenseModal.classList.add('hidden');
         DOM.addExpenseForm.reset();
@@ -135,8 +139,33 @@ export function renderPayerSelect(members) {
     });
 }
 
+export function renderParticipants(members) {
+    const participantsContainer = DOM.participantsContainer;
+    if (!participantsContainer) return;
+    
+    participantsContainer.innerHTML = '';
+    
+    members.forEach(member => {
+        const participantDiv = document.createElement('div');
+        participantDiv.className = 'participant-item';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `participant-${member._id}`;
+        checkbox.value = member._id;
+        checkbox.checked = true;
+        
+        const label = document.createElement('label');
+        label.htmlFor = `participant-${member._id}`;
+        label.textContent = member.username;
+        
+        participantDiv.appendChild(checkbox);
+        participantDiv.appendChild(label);
+        participantsContainer.appendChild(participantDiv);
+    });
+}
+
 DOM.closeModalBtn.addEventListener('click', () => toggleModal(false));
 DOM.cancelExpenseBtn.addEventListener('click', () => toggleModal(false));
-
 
 export { DOM };
