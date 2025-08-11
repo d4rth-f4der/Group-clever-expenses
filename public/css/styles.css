@@ -310,16 +310,22 @@ h1 {
     font-size: 0.875rem;
     color: #4b5563;
     margin-bottom: 4px;
-    display: block; /* Чтобы label был на новой строке */
+    display: block
 }
 
-#add-expense-form input {
+#add-expense-form input, #add-expense-form select {
     padding: 10px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     width: 100%;
     box-sizing: border-box;
     margin-bottom: 16px;
+}
+
+#add-expense-form input:focus, #add-expense-form select:focus {
+    outline: none;
+    border-color: #8c8c8c;
+    box-shadow: 0 0 0 2px rgba(60, 62, 65, 0.2);
 }
 
 .cancel-btn {

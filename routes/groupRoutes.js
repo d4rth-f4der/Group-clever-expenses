@@ -5,6 +5,7 @@ const Group = require('../models/group');
 const User = require('../models/user');
 const Expense = require('../models/expense');
 
+// на будущее: имплементировать на фронт. изменть адрес на /groups?
 router.post('/', protect, async (req, res) => {
     const { name, members } = req.body;
 
@@ -92,6 +93,7 @@ router.post('/:groupId/expenses', protect, async (req, res) => {
     }
 });
 
+// на будущее: изменть адрес на /groups?
 router.get('/', protect, async (req, res) => {
     try {
         const groups = await Group.find({ members: req.user._id }).populate('members', 'username email');

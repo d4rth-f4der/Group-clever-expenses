@@ -1,5 +1,7 @@
 import { apiRequest } from './api.js';
-import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM } from './ui.js';
+import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, renderPayerSelect } from './ui.js';
+
+let currentGroupMembers = [];
 
 function attachGroupCardListeners() {
     const allGroupCards = document.querySelectorAll('.group-card');
@@ -34,11 +36,11 @@ async function showGroupExpenses(groupId, groupName) {
         const transactions = balancesData.debts;
         const groupMembers = balancesData.group.members; 
         
-        // Исправлено: сохраняем groupMembers в history.state для использования в handleAddExpense
+        currentGroupMembers = groupMembers;
+
         history.replaceState({ screen: 'expenses', groupId, groupName, groupMembers }, '', `/groups/${groupId}`);
 
         toggleLoading(false);
-        // Исправлено: вызываем renderGroupDetails с правильными параметрами
         renderGroupDetails(groupName, expenses, transactions);
         
     } catch (error) {
@@ -80,12 +82,11 @@ function handleGroupClick(groupId, groupName) {
 async function handleAddExpense(e) {
     e.preventDefault();
     
-    // Теперь history.state содержит groupMembers
-    const { groupId, groupName, groupMembers } = history.state;
+    const { groupId, groupName } = history.state;
     const description = DOM.addExpenseForm.querySelector('#expense-description').value;
     const amount = parseFloat(DOM.addExpenseForm.querySelector('#expense-amount').value);
-    const payer = localStorage.getItem('userId');
-    const participants = groupMembers.map(member => member._id);
+    const payer = DOM.addExpenseForm.querySelector('#expense-payer').value; 
+    const participants = currentGroupMembers.map(member => member._id);
     
     if (!description || isNaN(amount) || amount <= 0) {
         alert('Please enter a valid description and amount.');
@@ -102,9 +103,8 @@ async function handleAddExpense(e) {
     try {
         toggleLoading(true);
         await apiRequest(`groups/${groupId}/expenses`, 'POST', expenseData);
-        // После успешного добавления обновляем список расходов
         await showGroupExpenses(groupId, groupName);
-        DOM.addExpenseModal.classList.add('hidden'); // Скрываем модальное окно
+        toggleModal(false);
     } catch (error) {
         displayError(error.message);
     }
@@ -135,17 +135,21 @@ function initializeApp() {
     
     window.addEventListener('popstate', handleRoute);
 
-    // Добавляем обработчики событий для нового функционала
     DOM.expenseDetailsContainer.addEventListener('click', (e) => {
         if (e.target.id === 'add-expense-btn') {
-            DOM.addExpenseModal.classList.remove('hidden');
+            renderPayerSelect(currentGroupMembers);
+            toggleModal(true);
         }
     });
 
     DOM.addExpenseForm.addEventListener('submit', handleAddExpense);
 
     DOM.addExpenseModal.querySelector('.close-btn').addEventListener('click', () => {
-        DOM.addExpenseModal.classList.add('hidden');
+        toggleModal(false);
+    });
+
+    DOM.addExpenseModal.querySelector('#cancel-expense-btn').addEventListener('click', () => {
+        toggleModal(false);
     });
     
     handleRoute();

@@ -11,6 +11,7 @@ const generateToken = (id) => {
     });
 };
 
+// на будущее: добавить на фронт
 router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
 

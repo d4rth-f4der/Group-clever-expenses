@@ -9,12 +9,13 @@ const DOM = {
     errorMessage: document.getElementById('error-message'),
     expenseDetailsContainer: document.getElementById('expense-details'),
     
-    // Новые элементы для модального окна
     addExpenseModal: document.getElementById('add-expense-modal'),
     addExpenseForm: document.getElementById('add-expense-form'),
     closeModalBtn: document.getElementById('close-modal-btn'),
     addExpenseBtn: document.getElementById('add-expense-btn'),
     cancelExpenseBtn: document.getElementById('cancel-expense-btn'),
+
+    payerSelect: document.getElementById('expense-payer'),
 };
 
 export function toggleUI(isLoggedIn) {
@@ -93,7 +94,6 @@ export function renderGroupDetails(groupName, expenses, transactions) {
         </li>
     `).join('');
     
-    // Updated HTML to wrap buttons in a flex container for correct positioning
     DOM.expenseDetailsContainer.innerHTML = `
         <div class="header-buttons">
             <button id="back-to-groups-btn" class="expense-action-button">← Back to groups</button>
@@ -107,24 +107,34 @@ export function renderGroupDetails(groupName, expenses, transactions) {
     
     document.getElementById('back-to-groups-btn').addEventListener('click', () => history.back());
     
-    // Добавляем слушателя событий для кнопки "Add Expense"
     document.getElementById('add-expense-btn').addEventListener('click', () => {
         toggleModal(true);
     });
 }
 
-// Новая функция для отображения/скрытия модального окна
 export function toggleModal(show) {
     if (show) {
         DOM.addExpenseModal.classList.remove('hidden');
     } else {
         DOM.addExpenseModal.classList.add('hidden');
-        DOM.addExpenseForm.reset(); // Сбрасываем поля формы
+        DOM.addExpenseForm.reset();
     }
 }
 
-// Слушатели событий для кнопок внутри модального окна
-// Эти слушатели нужно добавить, так как модальное окно теперь статично в HTML
+export function renderPayerSelect(members) {
+    const payerSelect = DOM.payerSelect;
+    if (!payerSelect) return;
+    
+    payerSelect.innerHTML = '';
+    
+    members.forEach(member => {
+        const option = document.createElement('option');
+        option.value = member._id;
+        option.textContent = member.username;
+        payerSelect.appendChild(option);
+    });
+}
+
 DOM.closeModalBtn.addEventListener('click', () => toggleModal(false));
 DOM.cancelExpenseBtn.addEventListener('click', () => toggleModal(false));
 
