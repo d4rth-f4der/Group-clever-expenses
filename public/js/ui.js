@@ -71,10 +71,6 @@ export function renderGroups(groups) {
     });
 }
 
-function renderAddExpenseButton() {
-    return `<button id="add-expense-btn">Add Expense</button>`;
-}
-
 export function renderGroupDetails(groupName, expenses, transactions) {
     DOM.mainTitle.textContent = `"${groupName}" Group Expenses`;
     DOM.groupsContainer.classList.add('hidden');
@@ -92,9 +88,12 @@ export function renderGroupDetails(groupName, expenses, transactions) {
         </li>
     `).join('');
     
+    // Updated HTML to wrap buttons in a flex container for correct positioning
     DOM.expenseDetailsContainer.innerHTML = `
-        <button id="back-to-groups-btn">← Back to groups</button>
-        ${renderAddExpenseButton()}
+        <div class="header-buttons">
+            <button id="back-to-groups-btn" class="expense-action-button">← Back to groups</button>
+            <button id="add-expense-btn" class="expense-action-button">Add Expense</button>
+        </div>
         <h3>Expenses list</h3>
         <ul>${expensesHtml || '<li>No expenses yet.</li>'}</ul>
         <h3>Who owes who</h3>
