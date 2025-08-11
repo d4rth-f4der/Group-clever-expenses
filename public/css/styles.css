@@ -357,3 +357,40 @@ h1 {
 .add-btn:hover {
     background-color: #46bb94;
 }
+
+.participants-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.participant-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 9999px;
+    background-color: #f9fafb;
+    color: #4b5563;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.participant-item.selected {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+}
+
+.participant-item:not(.selected):hover {
+    background-color: #e5e7eb;
+}
+
+.participant-item.selected:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}

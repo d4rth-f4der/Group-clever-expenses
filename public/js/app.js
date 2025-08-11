@@ -87,8 +87,9 @@ async function handleAddExpense(e) {
     const amount = parseFloat(DOM.addExpenseForm.querySelector('#expense-amount').value);
     const payer = DOM.addExpenseForm.querySelector('#expense-payer').value; 
     
-    const selectedParticipantsCheckboxes = DOM.participantsContainer.querySelectorAll('input[type="checkbox"]:checked');
-    const participants = Array.from(selectedParticipantsCheckboxes).map(cb => cb.value);
+    // Новая логика для сбора ID участников
+    const selectedParticipantsElements = DOM.participantsContainer.querySelectorAll('.participant-item.selected');
+    const participants = Array.from(selectedParticipantsElements).map(el => el.getAttribute('data-id'));
     
     if (!description || isNaN(amount) || amount <= 0) {
         alert('Please enter a valid description and amount.');
@@ -150,6 +151,13 @@ function initializeApp() {
     });
 
     DOM.addExpenseForm.addEventListener('submit', handleAddExpense);
+
+    DOM.participantsContainer.addEventListener('click', (e) => {
+        const participantItem = e.target.closest('.participant-item');
+        if (participantItem) {
+            participantItem.classList.toggle('selected');
+        }
+    });
 
     DOM.addExpenseModal.querySelector('.close-btn').addEventListener('click', () => {
         toggleModal(false);
