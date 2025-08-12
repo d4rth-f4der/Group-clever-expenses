@@ -83,11 +83,26 @@ export function renderGroupDetails(groupName, expenses, transactions) {
     DOM.groupsContainer.classList.add('hidden');
     DOM.expenseDetailsContainer.classList.remove('hidden');
 
-    const expensesHtml = expenses.map(expense => `
-        <li class="expense-item">
-            <strong>${expense.description}</strong>: ${expense.amount} hrn., paid by ${expense.payer.username}
-        </li>
-    `).join('');
+    const expensesHtml = expenses.map(expense => {
+        const participants = expense.participants.map(p => p.user.username).join(', ');
+        const date = new Date(expense.date);
+        const formattedDate = date.toLocaleDateString('uk-UA', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        });
+        const formattedTime = date.toLocaleTimeString('uk-UA', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        return `
+            <li class="expense-item">
+                <strong>${expense.description}</strong>: ${expense.amount} hrn., paid by ${expense.payer.username}
+                <br><small>Participants: ${participants} | Date: ${formattedDate} ${formattedTime}</small>
+            </li>
+        `;
+    }).join('');
 
     const transactionsHtml = transactions.map(t => `
         <li class="transaction-item">
