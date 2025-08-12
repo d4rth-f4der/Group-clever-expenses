@@ -8,7 +8,7 @@ const expenseSchema = new mongoose.Schema(
             trim: true
         },
         amount: {
-            type: Number, // в будущем: поменять на Decimal128 или использовать только целые числа (писать все в центах/копейках)
+            type: Number, // for future: change to Decimal128 or use only integers (eg all in cents)
             required: true,
             min: 0.01
         },

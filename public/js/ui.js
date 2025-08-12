@@ -139,7 +139,6 @@ export function renderPayerSelect(members) {
     });
 }
 
-// Обновленная функция для рендера участников
 export function renderParticipants(members) {
     const participantsContainer = DOM.participantsContainer;
     if (!participantsContainer) return;
@@ -147,11 +146,10 @@ export function renderParticipants(members) {
     participantsContainer.innerHTML = '';
     
     members.forEach(member => {
-        // Создаем кликабельный div вместо чекбокса и label
         const participantDiv = document.createElement('div');
-        participantDiv.className = 'participant-item selected'; // Добавляем класс 'selected' по умолчанию
-        participantDiv.setAttribute('data-id', member._id); // Храним ID участника в data-атрибуте
-        participantDiv.textContent = member.username; // Отображаем имя пользователя
+        participantDiv.className = 'participant-item selected';
+        participantDiv.setAttribute('data-id', member._id);
+        participantDiv.textContent = member.username;
         
         participantsContainer.appendChild(participantDiv);
     });

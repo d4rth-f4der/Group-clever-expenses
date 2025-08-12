@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-// require('crypto').randomBytes(32).toString('hex') - для генерации JWS_SECRET
+// require('crypto').randomBytes(32).toString('hex') - for JWS_SECRET generation
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -11,7 +11,7 @@ const generateToken = (id) => {
     });
 };
 
-// на будущее: добавить на фронт
+// for future: implement to frontend
 router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
 

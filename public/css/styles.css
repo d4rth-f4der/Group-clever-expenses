@@ -53,6 +53,11 @@ h1 {
     background-color: #4338ca;
 }
 
+#login-error {
+    color: #ef4444;
+    text-align: center;
+}
+
 #logout-btn {
     position: absolute;
     top: 24px;

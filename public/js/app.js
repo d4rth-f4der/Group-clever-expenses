@@ -87,7 +87,6 @@ async function handleAddExpense(e) {
     const amount = parseFloat(DOM.addExpenseForm.querySelector('#expense-amount').value);
     const payer = DOM.addExpenseForm.querySelector('#expense-payer').value; 
     
-    // Новая логика для сбора ID участников
     const selectedParticipantsElements = DOM.participantsContainer.querySelectorAll('.participant-item.selected');
     const participants = Array.from(selectedParticipantsElements).map(el => el.getAttribute('data-id'));
     
