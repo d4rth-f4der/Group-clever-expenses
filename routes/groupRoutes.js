@@ -128,6 +128,38 @@ router.get('/:groupId/expenses', protect, async (req, res) => {
     }
 });
 
+router.delete('/:groupId/expenses/:expenseId', protect, async (req, res) => {
+	const { groupId, expenseId } = req.params;
+
+	try {
+		const group = await Group.findById(groupId);
+		if (!group) return res.status(404).json({ message: 'Group not found' });
+
+		const isMember = group.members.map(String).includes(String(req.user._id));
+		if (!isMember) {
+			return res.status(403).json({ message: 'Not authorised to delete expenses in this group' });
+		}
+
+		const expense = await Expense.findOne({ _id: expenseId, group: groupId });
+		if (!expense) {
+			return res.status(404).json({ message: 'Expense not found' });
+		}
+
+		const isAdmin = String(group.admin) === String(req.user._id);
+		const isPayer = String(expense.payer) === String(req.user._id);
+
+		if (!isAdmin && !isPayer) {
+			return res.status(403).json({ message: 'Only group admin or payer can delete this expense' });
+		}
+
+		await expense.deleteOne();
+		return res.status(200).json({ message: 'Expense deleted successfully' });
+	} catch (err) {
+		console.error('Delete expense error:', err);
+		return res.status(500).json({ message: 'Server error on attempt to delete expense' });
+	}
+});
+
 router.get('/:groupId/balances', protect, async (req, res) => {
     const { groupId } = req.params;
 
