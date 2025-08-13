@@ -2,6 +2,7 @@ import { apiRequest } from './api.js';
 import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, renderPayerSelect, renderParticipants } from './ui.js';
 
 let currentGroupMembers = [];
+let expenseDatePicker = null;
 
 function attachGroupCardListeners() {
     const allGroupCards = document.querySelectorAll('.group-card');
@@ -106,6 +107,19 @@ async function handleAddExpense(e) {
         payer,
         participants,
     };
+    // Optional date
+    try {
+        const typedValue = document.querySelector('#expense-date')?.value.trim();
+        const selectedDate = expenseDatePicker && expenseDatePicker.selectedDates && expenseDatePicker.selectedDates[0];
+        if (selectedDate) {
+            expenseData.date = selectedDate.toISOString();
+        } else if (typedValue) {
+            const iso = new Date(typedValue.replace(' ', 'T')).toISOString();
+            if (iso) expenseData.date = iso;
+        }
+    } catch (_) {
+        // If invalid, let backend validation handle it
+    }
     
     try {
         toggleLoading(true);
@@ -146,6 +160,9 @@ function initializeApp() {
             renderPayerSelect(currentGroupMembers);
             renderParticipants(currentGroupMembers);
             toggleModal(true);
+            if (expenseDatePicker) {
+                expenseDatePicker.clear();
+            }
         }
     });
 
@@ -166,6 +183,16 @@ function initializeApp() {
         toggleModal(false);
     });
     
+    // Initialize Flatpickr for optional date/time
+    if (window.flatpickr) {
+        expenseDatePicker = window.flatpickr('#expense-date', {
+            enableTime: true,
+            time_24hr: true,
+            dateFormat: 'Y-m-d H:i',
+            allowInput: true,
+        });
+    }
+
     handleRoute();
 }
 
