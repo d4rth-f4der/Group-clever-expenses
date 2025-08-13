@@ -441,6 +441,43 @@ h1 {
     background-color: #46bb94;
 }
 
+.delete-btn {
+    background-color: #ef4444;
+    color: #ffffff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.delete-btn:hover {
+    background-color: #dc2626;
+}
+
+.expense-view-item {
+    margin-bottom: 16px;
+}
+
+.expense-view-item label {
+    font-size: 0.875rem;
+    color: #4b5563;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.expense-view-item span {
+    font-size: 1rem;
+    color: #1f2937;
+    display: block;
+    padding: 8px 12px;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
 .participants-grid {
     display: flex;
     flex-wrap: wrap;

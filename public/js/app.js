@@ -1,5 +1,5 @@
 import { apiRequest } from './api.js';
-import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, renderPayerSelect, renderParticipants } from './ui.js';
+import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants } from './ui.js';
 
 let currentGroupMembers = [];
 let expenseDatePicker = null;
@@ -159,7 +159,7 @@ function initializeApp() {
         if (e.target.id === 'add-expense-btn') {
             renderPayerSelect(currentGroupMembers);
             renderParticipants(currentGroupMembers);
-            toggleModal(true);
+            toggleModal(true, currentGroupMembers);
             if (expenseDatePicker) {
                 expenseDatePicker.clear();
             }
@@ -181,6 +181,14 @@ function initializeApp() {
 
     DOM.addExpenseModal.querySelector('#cancel-expense-btn').addEventListener('click', () => {
         toggleModal(false);
+    });
+
+    DOM.closeExpenseViewBtn.addEventListener('click', () => {
+        toggleExpenseViewModal(false);
+    });
+
+    DOM.deleteExpenseBtn.addEventListener('click', () => {
+        console.log('Delete button clicked - functionality not implemented yet');
     });
     
     // Initialize Flatpickr for optional date/time

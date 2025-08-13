@@ -17,6 +17,10 @@ const DOM = {
 
     payerSelect: document.getElementById('expense-payer'),
     participantsContainer: document.getElementById('expense-participants'),
+
+    expenseViewModal: document.getElementById('expense-view-modal'),
+    closeExpenseViewBtn: document.getElementById('close-expense-view-btn'),
+    deleteExpenseBtn: document.getElementById('delete-expense-btn'),
 };
 
 export function toggleUI(isLoggedIn) {
@@ -83,7 +87,7 @@ export function renderGroupDetails(groupName, expenses, transactions) {
     DOM.groupsContainer.classList.add('hidden');
     DOM.expenseDetailsContainer.classList.remove('hidden');
 
-    const expensesHtml = expenses.map(expense => {
+    const expensesHtml = expenses.map((expense, index) => {
         const participants = expense.participants.map(p => p.user.username).join(', ');
         const date = new Date(expense.date);
         const formattedDate = date.toLocaleDateString('uk-UA', { 
@@ -97,7 +101,7 @@ export function renderGroupDetails(groupName, expenses, transactions) {
         });
         
         return `
-            <li class="expense-item">
+            <li class="expense-item" data-expense-index="${index}" style="cursor: pointer;">
                 <div class="expense-main">
                     <span class="expense-description">${expense.description}</span>
                     <div class="expense-right">
@@ -136,19 +140,50 @@ export function renderGroupDetails(groupName, expenses, transactions) {
     document.getElementById('back-to-groups-btn').addEventListener('click', () => history.back());
     
     document.getElementById('add-expense-btn').addEventListener('click', () => {
-        toggleModal(true);
+    });
+
+    const expenseItems = DOM.expenseDetailsContainer.querySelectorAll('.expense-item');
+    expenseItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            toggleExpenseViewModal(true, expenses[index]);
+        });
     });
 }
 
-export function toggleModal(show) {
+export function toggleModal(show, groupMembers = []) {
     if (show) {
         DOM.addExpenseModal.classList.remove('hidden');
-        if (typeof renderParticipants !== 'undefined') {
-             renderParticipants(currentGroupMembers);
+        if (groupMembers.length > 0) {
+             renderParticipants(groupMembers);
         }
     } else {
         DOM.addExpenseModal.classList.add('hidden');
         DOM.addExpenseForm.reset();
+    }
+}
+
+export function toggleExpenseViewModal(show, expense = null) {
+    if (show && expense) {
+        document.getElementById('expense-view-description').textContent = expense.description;
+        document.getElementById('expense-view-amount').textContent = `${expense.amount} hrn.`;
+        document.getElementById('expense-view-payer').textContent = expense.payer.username;
+        document.getElementById('expense-view-participants').textContent = expense.participants.map(p => p.user.username).join(', ');
+        
+        const date = new Date(expense.date);
+        const formattedDate = date.toLocaleDateString('uk-UA', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        });
+        const formattedTime = date.toLocaleTimeString('uk-UA', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        document.getElementById('expense-view-date').textContent = `${formattedDate} ${formattedTime}`;
+        
+        DOM.expenseViewModal.classList.remove('hidden');
+    } else {
+        DOM.expenseViewModal.classList.add('hidden');
     }
 }
 
