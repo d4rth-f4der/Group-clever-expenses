@@ -117,6 +117,7 @@ router.get('/:groupId/expenses', protect, async (req, res) => {
         }
 
         const expenses = await Expense.find({ group: groupId })
+            .sort({ date: -1, _id: -1 })
             .populate('payer', 'username email')
             .populate('participants.user', 'username email');
 
