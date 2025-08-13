@@ -98,8 +98,20 @@ export function renderGroupDetails(groupName, expenses, transactions) {
         
         return `
             <li class="expense-item">
-                <strong>${expense.description}</strong>: ${expense.amount} hrn., paid by ${expense.payer.username}
-                <br><small>Participants: ${participants} | Date: ${formattedDate} ${formattedTime}</small>
+                <div class="expense-main">
+                    <span class="expense-description">${expense.description}</span>
+                    <div class="expense-right">
+                        <span class="expense-date">${formattedDate} ${formattedTime}</span>
+                        <span class="expense-amount">${expense.amount} hrn.</span>
+                    </div>
+                </div>
+                <div class="expense-details">
+                    <span class="expense-participants">
+                        <span class="label">shared</span> 
+                        ${expense.participants.map(p => `<span class="username participant-username">${p.user.username}</span>`).join('')}
+                    </span>
+                    <span class="expense-payer"><span class="label">paid</span> <span class="username payer-username">${expense.payer.username}</span></span>
+                </div>
             </li>
         `;
     }).join('');

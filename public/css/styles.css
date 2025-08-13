@@ -207,6 +207,84 @@ h1 {
     font-weight: 600;
 }
 
+.expense-item {
+    padding: 16px 20px !important;
+}
+
+.expense-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.expense-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.expense-description {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1f2937;
+}
+
+.expense-amount {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #0f6349;
+    background-color: #e7f1ec;
+    border: 1px solid #9cbeb3;
+    padding: 4px 12px;
+    border-radius: 6px;
+}
+
+.expense-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.expense-participants {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.label {
+    color: #72777e;
+    font-weight: 500;
+}
+
+.username {
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: #374151;
+    display: inline-block;
+    transition: all 0.2s ease-in-out;
+}
+
+.payer-username {
+    background-color: #c8ebe2;
+    color: #28403c;
+}
+
+.participant-username {
+    background-color: #dedede;
+    color: #454249;
+}
+
+.expense-date {
+    font-size: 0.875rem;
+    color: #7e838c;
+    background-color: #f9fafb;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
 #expense-details .transaction-item {
     background-color: #d1fae5;
     border-color: #10b981;
