@@ -187,9 +187,32 @@ function initializeApp() {
         toggleExpenseViewModal(false);
     });
 
-    DOM.deleteExpenseBtn.addEventListener('click', () => {
-        console.log('Delete button clicked - functionality not implemented yet');
-    });
+    async function handleDeleteExpense() {
+        const { expenseId, groupId } = DOM.deleteExpenseBtn.dataset;
+        const groupName = history.state?.groupName || 'Group Details';
+
+        if (!expenseId || !groupId) {
+            console.error('Missing expense or group ID for deletion');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to delete this expense?')) {
+            return;
+        }
+
+        try {
+            toggleLoading(true);
+            await apiRequest(`groups/${groupId}/expenses/${expenseId}`, 'DELETE');
+            toggleExpenseViewModal(false);
+            await showGroupExpenses(groupId, groupName);
+        } catch (error) {
+            displayError(error.message);
+        } finally {
+            toggleLoading(false);
+        }
+    }
+
+    DOM.deleteExpenseBtn.addEventListener('click', handleDeleteExpense);
     
     // Initialize Flatpickr for optional date/time
     if (window.flatpickr) {

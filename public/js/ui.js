@@ -181,6 +181,8 @@ export function toggleExpenseViewModal(show, expense = null) {
         });
         document.getElementById('expense-view-date').textContent = `${formattedDate} ${formattedTime}`;
         
+        DOM.deleteExpenseBtn.dataset.expenseId = expense._id;
+        DOM.deleteExpenseBtn.dataset.groupId = expense.group;
         DOM.expenseViewModal.classList.remove('hidden');
     } else {
         DOM.expenseViewModal.classList.add('hidden');
