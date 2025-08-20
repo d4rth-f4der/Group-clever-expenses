@@ -128,7 +128,6 @@ router.get('/:groupId/expenses', protect, async (req, res) => {
     }
 });
 
-// for future:add to frontend
 router.delete('/:groupId/expenses/:expenseId', protect, async (req, res) => {
 	const { groupId, expenseId } = req.params;
 

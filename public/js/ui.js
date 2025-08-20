@@ -21,6 +21,7 @@ const DOM = {
     expenseViewModal: document.getElementById('expense-view-modal'),
     closeExpenseViewBtn: document.getElementById('close-expense-view-btn'),
     deleteExpenseBtn: document.getElementById('delete-expense-btn'),
+    newGroupBtn: document.getElementById('new-group-btn'),
 };
 
 export function toggleUI(isLoggedIn) {
@@ -60,6 +61,7 @@ export function renderGroups(groups) {
     DOM.groupsContainer.innerHTML = '';
     DOM.groupsContainer.classList.remove('hidden');
     DOM.expenseDetailsContainer.classList.add('hidden');
+    DOM.newGroupBtn.classList.remove('hidden');
 
     if (groups.length === 0) {
         DOM.groupsContainer.innerHTML = '<p style="text-align: center; color: #6b7280; font-size: 1.125rem;">You don`t belong to any group yet.</p>';
@@ -86,6 +88,7 @@ export function renderGroupDetails(groupName, expenses, transactions) {
     DOM.mainTitle.textContent = `"${groupName}" Group Expenses`;
     DOM.groupsContainer.classList.add('hidden');
     DOM.expenseDetailsContainer.classList.remove('hidden');
+    DOM.newGroupBtn.classList.add('hidden');
 
     const expensesHtml = expenses.map((expense, index) => {
         const participants = expense.participants.map(p => p.user.username).join(', ');
