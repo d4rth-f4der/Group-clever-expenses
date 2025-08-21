@@ -1,9 +1,10 @@
-import { apiRequest } from './api.js';
+import { apiRequest, findUserByName } from './api.js';
 import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants, toggleNewGroupModal, renderGroupParticipants } from './ui.js';
 
 let currentGroupMembers = [];
 let currentUser = null;
 let expenseDatePicker = null;
+let newGroupParticipants = [];
 
 function attachGroupCardListeners() {
     const allGroupCards = document.querySelectorAll('.group-card');
@@ -216,6 +217,9 @@ async function initializeApp() {
         
         if (currentUser) {
             toggleNewGroupModal(true, currentUser);
+            // Initialize participants with current user
+            newGroupParticipants = [currentUser];
+            renderGroupParticipants(newGroupParticipants);
         } else {
             alert('Please log in first.');
         }
@@ -227,6 +231,33 @@ async function initializeApp() {
 
     DOM.cancelNewGroupBtn.addEventListener('click', () => {
         toggleNewGroupModal(false);
+    });
+
+    // Add participant in New Group modal
+    DOM.addParticipantBtn.addEventListener('click', async () => {
+        const input = DOM.addParticipantInput.value.trim();
+        if (!input) return;
+
+        // Prevent adding duplicates by username
+        if (newGroupParticipants.some(p => p.username.toLowerCase() === input.toLowerCase())) {
+            alert('This participant is already added.');
+            return;
+        }
+
+        try {
+            const user = await findUserByName(input);
+            if (!user) {
+                alert('username not found');
+                return;
+            }
+
+            newGroupParticipants.push(user);
+            renderGroupParticipants(newGroupParticipants);
+            DOM.addParticipantInput.value = '';
+        } catch (e) {
+            console.error(e);
+            alert('Failed to validate username. Please try again.');
+        }
     });
 
     async function handleDeleteExpense() {

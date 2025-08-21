@@ -1,5 +1,17 @@
 const API_URL = '';
 
+export async function findUserByName(username) {
+    try {
+        const response = await apiRequest(`users/${username}`);
+        return response;
+    } catch (error) {
+        if (error.message === 'User not found') {
+            return null;
+        }
+        throw error;
+    }
+}
+
 export async function apiRequest(endpoint, method = 'GET', body = null) {
     const token = localStorage.getItem('userToken');
     const headers = {
