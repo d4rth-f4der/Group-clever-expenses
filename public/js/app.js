@@ -178,6 +178,40 @@ async function initializeApp() {
         }
     });
 
+    // Create New Group submit
+    DOM.newGroupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const nameInput = document.getElementById('group-name');
+        const name = nameInput?.value.trim();
+        if (!name) {
+            alert('Please enter a group name.');
+            return;
+        }
+
+        // Ensure at least one member (current user already included)
+        if (!newGroupParticipants || newGroupParticipants.length === 0) {
+            alert('Please add at least one participant.');
+            return;
+        }
+
+        const members = newGroupParticipants.map(u => u._id);
+
+        try {
+            toggleLoading(true);
+            await apiRequest('groups', 'POST', { name, members });
+            toggleNewGroupModal(false);
+            // Refresh groups list and view
+            history.pushState({ screen: 'groups' }, '', '/');
+            await fetchGroups();
+        } catch (error) {
+            console.error('Failed to create group:', error);
+            alert(error.message || 'Failed to create group');
+        } finally {
+            toggleLoading(false);
+        }
+    });
+
     DOM.addExpenseForm.addEventListener('submit', handleAddExpense);
 
     DOM.participantsContainer.addEventListener('click', (e) => {

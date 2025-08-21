@@ -5,7 +5,7 @@ const Group = require('../models/group');
 const User = require('../models/user');
 const Expense = require('../models/expense');
 
-// for future: implement to frontend. change route to /groups?
+// for future: change route to /groups?
 router.post('/', protect, async (req, res) => {
     const { name, members } = req.body;
 
