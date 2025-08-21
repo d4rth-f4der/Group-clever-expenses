@@ -5,7 +5,6 @@ const Group = require('../models/group');
 const User = require('../models/user');
 const Expense = require('../models/expense');
 
-// for future: change route to /groups?
 router.post('/', protect, async (req, res) => {
     const { name, members } = req.body;
 
@@ -93,7 +92,6 @@ router.post('/:groupId/expenses', protect, async (req, res) => {
     }
 });
 
-// for future: change route to /groups?
 router.get('/', protect, async (req, res) => {
     try {
         const groups = await Group.find({ members: req.user._id }).populate('members', 'username email');
@@ -158,6 +156,29 @@ router.delete('/:groupId/expenses/:expenseId', protect, async (req, res) => {
 		console.error('Delete expense error:', err);
 		return res.status(500).json({ message: 'Server error on attempt to delete expense' });
 	}
+});
+
+// Delete entire group by ID (admin only)
+router.delete('/:groupId', protect, async (req, res) => {
+    const { groupId } = req.params;
+    try {
+        const group = await Group.findById(groupId);
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+
+        const isAdmin = String(group.admin) === String(req.user._id);
+        if (!isAdmin) {
+            return res.status(403).json({ message: 'Only group admin can delete this group' });
+        }
+
+        // Remove all expenses linked to this group
+        await Expense.deleteMany({ group: groupId });
+        await group.deleteOne();
+
+        return res.status(200).json({ message: 'Group deleted successfully' });
+    } catch (err) {
+        console.error('Delete group error:', err);
+        return res.status(500).json({ message: 'Server error on attempt to delete group' });
+    }
 });
 
 router.get('/:groupId/balances', protect, async (req, res) => {
