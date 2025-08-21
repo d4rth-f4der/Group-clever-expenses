@@ -569,3 +569,53 @@ h1 {
     background-color: #2563eb;
     border-color: #2563eb;
 }
+
+/* New Group Modal Styles */
+#new-group-form label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+#new-group-form input {
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 16px;
+    width: 100%;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+}
+
+#new-group-form input:focus {
+    outline: none;
+    border-color: #8c8c8c;
+    box-shadow: 0 0 0 2px rgba(60, 62, 65, 0.2);
+}
+
+.add-participant-section {
+    align-items: stretch;
+}
+
+.add-participant-section input {
+    flex: 1;
+    margin-bottom: 0;
+    margin-right: 8px;
+}
+
+.add-participant-section button {
+    background-color: #6b7280;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    height: 42px;
+    box-sizing: border-box;
+}
+
+.add-participant-section button:hover {
+    background-color: #4b5563;
+}

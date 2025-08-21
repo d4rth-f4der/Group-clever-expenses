@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <link href="css/styles.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
+
 <body>
     <div class="container">
         <button id="logout-btn" class="hidden">Exit</button>
@@ -35,7 +37,7 @@
         <div id="groups-container" class="hidden"></div>
         <div id="error-message" class="hidden"></div>
         <div id="expense-details" class="hidden"></div>
-        
+
     </div>
 
     <div id="add-expense-modal" class="modal-overlay hidden">
@@ -47,10 +49,10 @@
             <form id="add-expense-form">
                 <label for="expense-description">Description:</label>
                 <input type="text" id="expense-description" placeholder="Dinner at restaurant" required>
-                
+
                 <label for="expense-amount">Amount (UAH):</label>
                 <input type="number" id="expense-amount" placeholder="e.g., 500" step="0.01" required>
-                
+
                 <label for="expense-payer">Paid by:</label>
                 <select id="expense-payer" required></select>
 
@@ -59,7 +61,7 @@
 
                 <label for="expense-date">Date/time:</label>
                 <input type="text" id="expense-date" placeholder="YYYY-MM-DD HH:MM">
-                
+
                 <div class="modal-actions">
                     <button type="button" id="cancel-expense-btn" class="cancel-btn">Cancel</button>
                     <button type="submit" class="add-btn">Add</button>
@@ -102,7 +104,37 @@
         </div>
     </div>
 
+    <div id="new-group-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Group</h2>
+                <button id="close-new-group-btn" class="close-btn">&times;</button>
+            </div>
+            <form id="new-group-form">
+                <label for="group-name" style="color: #6b7280;">Group name:</label>
+                <input type="text" id="group-name" placeholder="Weekend Trip" required>
+
+                <label style="color: #6b7280;">Participants:</label>
+                <div id="group-participants" class="participants-list"
+                    style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">
+                </div>
+
+                <label for="add-participant-input" style="color: #6b7280;">Add participant:</label>
+                <div class="add-participant-section" style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <input type="text" id="add-participant-input" placeholder="Enter username">
+                    <button type="button" id="add-participant-btn">Add</button>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-new-group-btn" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="add-btn">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script type="module" src="js/app.js"></script>
 </body>
+
 </html>

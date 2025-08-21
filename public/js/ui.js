@@ -22,6 +22,15 @@ const DOM = {
     closeExpenseViewBtn: document.getElementById('close-expense-view-btn'),
     deleteExpenseBtn: document.getElementById('delete-expense-btn'),
     newGroupBtn: document.getElementById('new-group-btn'),
+    
+    // New Group Modal elements
+    newGroupModal: document.getElementById('new-group-modal'),
+    newGroupForm: document.getElementById('new-group-form'),
+    closeNewGroupBtn: document.getElementById('close-new-group-btn'),
+    cancelNewGroupBtn: document.getElementById('cancel-new-group-btn'),
+    groupParticipants: document.getElementById('group-participants'),
+    addParticipantInput: document.getElementById('add-participant-input'),
+    addParticipantBtn: document.getElementById('add-participant-btn'),
 };
 
 export function toggleUI(isLoggedIn) {
@@ -29,11 +38,13 @@ export function toggleUI(isLoggedIn) {
         DOM.loginContainer.classList.add('hidden');
         DOM.logoutBtn.classList.remove('hidden');
         DOM.groupsContainer.classList.remove('hidden');
+        DOM.newGroupBtn.classList.remove('hidden');
     } else {
         DOM.loginContainer.classList.remove('hidden');
         DOM.logoutBtn.classList.add('hidden');
         DOM.groupsContainer.classList.add('hidden');
         DOM.expenseDetailsContainer.classList.add('hidden');
+        DOM.newGroupBtn.classList.add('hidden');
         DOM.mainTitle.textContent = 'My Group Expenses';
     }
 }
@@ -219,6 +230,37 @@ export function renderParticipants(members) {
         participantDiv.textContent = member.username;
         
         participantsContainer.appendChild(participantDiv);
+    });
+}
+
+export function toggleNewGroupModal(show, currentUser = null) {
+    if (show) {
+        DOM.newGroupModal.classList.remove('hidden');
+        DOM.newGroupModal.style.display = 'flex';
+    } else {
+        DOM.newGroupModal.classList.add('hidden');
+        DOM.newGroupModal.style.display = 'none';
+    }
+    
+    if (show && currentUser) {
+        // Reset form
+        document.getElementById('group-name').value = '';
+        DOM.addParticipantInput.value = '';
+        
+        // Show current user as first participant
+        renderGroupParticipants([currentUser]);
+    }
+}
+
+export function renderGroupParticipants(participants) {
+    DOM.groupParticipants.innerHTML = '';
+    
+    participants.forEach(participant => {
+        const participantTag = document.createElement('div');
+        participantTag.className = 'participant-tag';
+        participantTag.style.cssText = 'display: inline-block; background-color: #3b82f6; color: white; padding: 8px 16px; border-radius: 20px; font-size: 1rem; font-weight: 500; margin: 4px 8px 4px 0;';
+        participantTag.textContent = participant.username;
+        DOM.groupParticipants.appendChild(participantTag);
     });
 }
 

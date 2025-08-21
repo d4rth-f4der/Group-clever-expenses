@@ -1,7 +1,8 @@
 import { apiRequest } from './api.js';
-import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants } from './ui.js';
+import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants, toggleNewGroupModal, renderGroupParticipants } from './ui.js';
 
 let currentGroupMembers = [];
+let currentUser = null;
 let expenseDatePicker = null;
 
 function attachGroupCardListeners() {
@@ -149,7 +150,17 @@ async function handleRoute() {
     }
 }
 
-function initializeApp() {
+async function initializeApp() {
+    // Get current user info
+    try {
+        const token = localStorage.getItem('userToken');
+        if (token) {
+            currentUser = await apiRequest('users/me');
+        }
+    } catch (error) {
+        console.error('Failed to get current user:', error);
+    }
+
     DOM.loginForm.addEventListener('submit', handleLogin);
     DOM.logoutBtn.addEventListener('click', handleLogout);
     
@@ -185,6 +196,37 @@ function initializeApp() {
 
     DOM.closeExpenseViewBtn.addEventListener('click', () => {
         toggleExpenseViewModal(false);
+    });
+
+    // New Group Modal Events
+    DOM.newGroupBtn.addEventListener('click', async () => {
+        // If currentUser is not loaded, try to get it
+        if (!currentUser) {
+            try {
+                const token = localStorage.getItem('userToken');
+                if (token) {
+                    currentUser = await apiRequest('users/me');
+                }
+            } catch (error) {
+                console.error('Failed to get current user:', error);
+                alert('Failed to load user information. Please refresh the page.');
+                return;
+            }
+        }
+        
+        if (currentUser) {
+            toggleNewGroupModal(true, currentUser);
+        } else {
+            alert('Please log in first.');
+        }
+    });
+
+    DOM.closeNewGroupBtn.addEventListener('click', () => {
+        toggleNewGroupModal(false);
+    });
+
+    DOM.cancelNewGroupBtn.addEventListener('click', () => {
+        toggleNewGroupModal(false);
     });
 
     async function handleDeleteExpense() {
