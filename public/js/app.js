@@ -7,7 +7,9 @@ let expenseDatePicker = null;
 let newGroupParticipants = [];
 
 // Small helper to show custom confirm modal and return a Promise<boolean>
-function showConfirm(message = 'Are you sure?') {
+// Options: { overlayCancel?: boolean, escCancel?: boolean }
+function showConfirm(message = 'Are you sure?', options = {}) {
+    const { overlayCancel = true, escCancel = true } = options;
     return new Promise((resolve) => {
         const modal = document.getElementById('confirm-modal');
         const msgEl = document.getElementById('confirm-message');
@@ -30,12 +32,20 @@ function showConfirm(message = 'Are you sure?') {
             cancelBtn.removeEventListener('click', onNo);
             closeBtn.removeEventListener('click', onNo);
             modal.removeEventListener('click', onOverlayClick);
+            document.removeEventListener('keydown', onKeyDown, true);
         };
 
         const onYes = () => { cleanup(); resolve(true); };
         const onNo = () => { cleanup(); resolve(false); };
         const onOverlayClick = (e) => {
-            if (e.target === modal) {
+            if (!overlayCancel) return;
+            if (e.target === modal) onNo();
+        };
+        const onKeyDown = (e) => {
+            if (!escCancel) return;
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                e.preventDefault();
                 onNo();
             }
         };
@@ -44,6 +54,7 @@ function showConfirm(message = 'Are you sure?') {
         cancelBtn.addEventListener('click', onNo);
         closeBtn.addEventListener('click', onNo);
         modal.addEventListener('click', onOverlayClick);
+        document.addEventListener('keydown', onKeyDown, true);
     });
 }
 
@@ -378,19 +389,31 @@ async function initializeApp() {
             return;
         }
 
-        if (!confirm('Are you sure you want to delete this expense?')) {
-            return;
+        const confirmed = await showConfirm('Are you sure you want to delete this expense?');
+        if (!confirmed) return;
+
+        const inlineError = document.getElementById('expense-delete-error');
+        if (inlineError) {
+            inlineError.textContent = '';
+            inlineError.classList.add('hidden');
         }
 
+        const btn = DOM.deleteExpenseBtn;
+        const prevDisabled = btn.disabled;
+        btn.disabled = true;
+
         try {
-            toggleLoading(true);
             await apiRequest(`groups/${groupId}/expenses/${expenseId}`, 'DELETE');
             toggleExpenseViewModal(false);
             await showGroupExpenses(groupId, groupName);
         } catch (error) {
-            displayError(error.message);
+            const msg = String(error.message || 'Failed to delete expense');
+            if (inlineError) {
+                inlineError.textContent = msg;
+                inlineError.classList.remove('hidden');
+            }
         } finally {
-            toggleLoading(false);
+            btn.disabled = prevDisabled;
         }
     }
 

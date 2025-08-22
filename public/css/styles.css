@@ -414,6 +414,11 @@ h1 {
     z-index: 1000;
 }
 
+/* Ensure confirm modal stacks above other modals */
+#confirm-modal {
+    z-index: 1100;
+}
+
 .modal-content {
     background-color: #ffffff;
     padding: 24px;
