@@ -3,7 +3,8 @@ import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails
 
 let currentGroupMembers = [];
 let currentUser = null;
-let expenseDatePicker = null;
+let expenseDatePicker = null; // for Add Expense modal
+let expenseViewDatePicker = null; // for Expense Details modal
 let newGroupParticipants = [];
 
 // Small helper to show custom confirm modal and return a Promise<boolean>
@@ -96,7 +97,7 @@ async function showGroupExpenses(groupId, groupName) {
         history.replaceState({ screen: 'expenses', groupId, groupName, groupMembers }, '', `/groups/${groupId}`);
 
         toggleLoading(false);
-        renderGroupDetails(groupName, expenses, transactions);
+        renderGroupDetails(groupName, expenses, transactions, groupMembers);
         
     } catch (error) {
         displayError(error.message);
@@ -433,7 +434,7 @@ async function initializeApp() {
 
     DOM.deleteExpenseBtn.addEventListener('click', handleDeleteExpense);
     
-    // Initialize Flatpickr for optional date/time
+    // Initialize Flatpickr for optional date/time (Add Expense modal)
     if (window.flatpickr) {
         expenseDatePicker = window.flatpickr('#expense-date', {
             enableTime: true,
@@ -441,6 +442,16 @@ async function initializeApp() {
             dateFormat: 'Y-m-d H:i',
             allowInput: true,
         });
+        // Initialize Flatpickr for Expense Details modal date input
+        const viewDateEl = document.querySelector('#expense-view-date');
+        if (viewDateEl) {
+            expenseViewDatePicker = window.flatpickr(viewDateEl, {
+                enableTime: true,
+                time_24hr: true,
+                dateFormat: 'Y-m-d H:i',
+                allowInput: true,
+            });
+        }
     }
 
     handleRoute();

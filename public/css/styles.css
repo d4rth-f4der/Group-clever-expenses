@@ -4,6 +4,12 @@ body {
     padding: 24px;
     margin: 0;
 }
+
+/* Make date input in Expense Details show pointer cursor */
+#expense-view-content #expense-view-date { cursor: pointer; }
+
+/* Ensure Flatpickr calendar overlays above modal */
+.flatpickr-calendar { z-index: 1500 !important; }
 .container {
     max-width: 960px;
     margin: 0 auto;
@@ -482,6 +488,27 @@ h1 {
 }
 
 #add-expense-form input:focus, #add-expense-form select:focus {
+    outline: none;
+    border-color: #8c8c8c;
+    box-shadow: 0 0 0 2px rgba(60, 62, 65, 0.2);
+}
+
+/* Match styles for payer select in Expense Details modal */
+#expense-view-content select,
+#expense-view-content input[type="text"],
+#expense-view-content input[type="number"] {
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 16px;
+    background-color: #ffffff;
+}
+
+#expense-view-content select:focus,
+#expense-view-content input[type="text"]:focus,
+#expense-view-content input[type="number"]:focus {
     outline: none;
     border-color: #8c8c8c;
     box-shadow: 0 0 0 2px rgba(60, 62, 65, 0.2);

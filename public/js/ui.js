@@ -95,7 +95,7 @@ export function renderGroups(groups) {
     });
 }
 
-export function renderGroupDetails(groupName, expenses, transactions) {
+export function renderGroupDetails(groupName, expenses, transactions, groupMembers = []) {
     DOM.mainTitle.textContent = `"${groupName}" Group Expenses`;
     DOM.groupsContainer.classList.add('hidden');
     DOM.expenseDetailsContainer.classList.remove('hidden');
@@ -163,7 +163,7 @@ export function renderGroupDetails(groupName, expenses, transactions) {
     const expenseItems = DOM.expenseDetailsContainer.querySelectorAll('.expense-item');
     expenseItems.forEach((item, index) => {
         item.addEventListener('click', () => {
-            toggleExpenseViewModal(true, expenses[index]);
+            toggleExpenseViewModal(true, expenses[index], groupMembers);
         });
     });
 }
@@ -180,12 +180,64 @@ export function toggleModal(show, groupMembers = []) {
     }
 }
 
-export function toggleExpenseViewModal(show, expense = null) {
+export function toggleExpenseViewModal(show, expense = null, groupMembers = []) {
     if (show && expense) {
-        document.getElementById('expense-view-description').textContent = expense.description;
-        document.getElementById('expense-view-amount').textContent = `${expense.amount} hrn.`;
-        document.getElementById('expense-view-payer').textContent = expense.payer.username;
-        document.getElementById('expense-view-participants').textContent = expense.participants.map(p => p.user.username).join(', ');
+        const descInput = document.getElementById('expense-view-description');
+        if (descInput) descInput.value = expense.description || '';
+        const amountInput = document.getElementById('expense-view-amount');
+        if (amountInput) amountInput.value = typeof expense.amount === 'number' ? expense.amount : '';
+        // Populate "Paid by" select with group members
+        const payerSelectEl = document.getElementById('expense-view-payer');
+        if (payerSelectEl) {
+            payerSelectEl.innerHTML = '';
+            let members = Array.isArray(groupMembers) && groupMembers.length > 0
+                ? groupMembers
+                : [];
+            // Fallback: ensure current payer present even if groupMembers missing
+            const payerId = typeof expense.payer === 'object' ? expense.payer._id : String(expense.payer);
+            const payerObj = typeof expense.payer === 'object' ? expense.payer : null;
+            if (!members.length) {
+                const fromParticipants = expense.participants?.map(p => p.user).filter(Boolean) || [];
+                members = [...fromParticipants];
+                if (payerObj && !members.find(m => String(m._id) === String(payerId))) {
+                    members.push(payerObj);
+                }
+            }
+            // Deduplicate by _id
+            const seen = new Set();
+            members.forEach(m => {
+                const id = String(m._id);
+                if (seen.has(id)) return;
+                seen.add(id);
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = m.username;
+                payerSelectEl.appendChild(opt);
+            });
+            payerSelectEl.value = String(payerId);
+        }
+        // Render all group members as chips; highlight those who participate in expense
+        const viewParticipants = document.getElementById('expense-view-participants');
+        if (viewParticipants) {
+            viewParticipants.innerHTML = '';
+            const participantIds = new Set(expense.participants.map(p => p.user._id));
+            const toRender = Array.isArray(groupMembers) && groupMembers.length > 0
+                ? groupMembers
+                : expense.participants.map(p => p.user); // fallback
+            toRender.forEach(member => {
+                const chip = document.createElement('div');
+                const isSelected = participantIds.has(member._id);
+                chip.className = 'participant-item' + (isSelected ? ' selected' : '');
+                chip.textContent = member.username;
+                chip.setAttribute('data-id', member._id);
+                // Visual toggle only (no persistence yet)
+                chip.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    chip.classList.toggle('selected');
+                });
+                viewParticipants.appendChild(chip);
+            });
+        }
         
         const date = new Date(expense.date);
         const formattedDate = date.toLocaleDateString('uk-UA', { 
@@ -197,7 +249,35 @@ export function toggleExpenseViewModal(show, expense = null) {
             hour: '2-digit', 
             minute: '2-digit' 
         });
-        document.getElementById('expense-view-date').textContent = `${formattedDate} ${formattedTime}`;
+        const dateInput = document.getElementById('expense-view-date');
+        if (dateInput) {
+            const fp = dateInput._flatpickr;
+            if (fp) {
+                fp.setDate(date, true);
+                if (!dateInput.dataset.fpBound) {
+                    dateInput.addEventListener('focus', () => fp.open());
+                    dateInput.addEventListener('click', () => fp.open());
+                    dateInput.dataset.fpBound = '1';
+                }
+            } else if (window.flatpickr) {
+                // Initialize if not yet initialized (e.g., if modal injected after init)
+                const init = window.flatpickr(dateInput, {
+                    enableTime: true,
+                    time_24hr: true,
+                    dateFormat: 'Y-m-d H:i',
+                    allowInput: true,
+                });
+                init.setDate(date, true);
+                if (!dateInput.dataset.fpBound) {
+                    dateInput.addEventListener('focus', () => init.open());
+                    dateInput.addEventListener('click', () => init.open());
+                    dateInput.dataset.fpBound = '1';
+                }
+            } else {
+                // Fallback: just set string
+                dateInput.value = `${formattedDate} ${formattedTime}`;
+            }
+        }
         
         DOM.deleteExpenseBtn.dataset.expenseId = expense._id;
         DOM.deleteExpenseBtn.dataset.groupId = expense.group;
