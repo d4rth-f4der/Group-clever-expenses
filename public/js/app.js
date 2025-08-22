@@ -219,6 +219,20 @@ async function initializeApp() {
     
     window.addEventListener('popstate', handleRoute);
 
+    // Global unauthorized handler: if any API call returns 401, force login view
+    window.addEventListener('api:unauthorized', () => {
+        try { toggleLoading(false); } catch (_) {}
+        try { toggleModal(false); } catch (_) {}
+        try { toggleExpenseViewModal(false); } catch (_) {}
+        try { toggleNewGroupModal(false); } catch (_) {}
+        if (DOM.loginError) {
+            DOM.loginError.textContent = 'Your session has expired. Please log in again.';
+        }
+        toggleUI(false);
+        // Reset route to root without reloading
+        try { history.replaceState({}, '', '/'); } catch (_) {}
+    });
+
     DOM.expenseDetailsContainer.addEventListener('click', async (e) => {
         if (e.target.id === 'add-expense-btn') {
             renderPayerSelect(currentGroupMembers);
