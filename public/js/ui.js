@@ -20,6 +20,7 @@ const DOM = {
 
     expenseViewModal: document.getElementById('expense-view-modal'),
     closeExpenseViewBtn: document.getElementById('close-expense-view-btn'),
+    saveExpenseBtn: document.getElementById('save-expense-btn'),
     deleteExpenseBtn: document.getElementById('delete-expense-btn'),
     newGroupBtn: document.getElementById('new-group-btn'),
     
@@ -279,8 +280,14 @@ export function toggleExpenseViewModal(show, expense = null, groupMembers = []) 
             }
         }
         
-        DOM.deleteExpenseBtn.dataset.expenseId = expense._id;
-        DOM.deleteExpenseBtn.dataset.groupId = expense.group;
+        if (DOM.deleteExpenseBtn) {
+            DOM.deleteExpenseBtn.dataset.expenseId = expense._id;
+            DOM.deleteExpenseBtn.dataset.groupId = expense.group;
+        }
+        if (DOM.saveExpenseBtn) {
+            DOM.saveExpenseBtn.dataset.expenseId = expense._id;
+            DOM.saveExpenseBtn.dataset.groupId = expense.group;
+        }
         DOM.expenseViewModal.classList.remove('hidden');
     } else {
         DOM.expenseViewModal.classList.add('hidden');

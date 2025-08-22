@@ -434,6 +434,77 @@ async function initializeApp() {
 
     DOM.deleteExpenseBtn.addEventListener('click', handleDeleteExpense);
     
+    async function handleSaveExpense() {
+        const saveBtn = DOM.saveExpenseBtn;
+        const { expenseId, groupId } = saveBtn?.dataset || {};
+        const groupName = history.state?.groupName || 'Group Details';
+        if (!expenseId || !groupId) return;
+
+        const inlineError = document.getElementById('expense-delete-error');
+        if (inlineError) {
+            inlineError.textContent = '';
+            inlineError.classList.add('hidden');
+        }
+
+        // Collect edited values
+        const desc = document.getElementById('expense-view-description')?.value?.trim();
+        const amountVal = document.getElementById('expense-view-amount')?.value;
+        const payer = document.getElementById('expense-view-payer')?.value;
+        const selectedChips = document.querySelectorAll('#expense-view-participants .participant-item.selected');
+        const participants = Array.from(selectedChips).map(el => el.getAttribute('data-id'));
+
+        const payload = {};
+        if (typeof desc !== 'undefined') payload.description = desc;
+        if (typeof amountVal !== 'undefined' && amountVal !== '') payload.amount = Number(amountVal);
+        if (typeof payer !== 'undefined' && payer) payload.payer = payer;
+        if (participants && Array.isArray(participants)) payload.participants = participants;
+
+        try {
+            const viewDateEl = document.getElementById('expense-view-date');
+            const selectedDate = expenseViewDatePicker && expenseViewDatePicker.selectedDates && expenseViewDatePicker.selectedDates[0];
+            if (selectedDate) {
+                payload.date = selectedDate.toISOString();
+            } else if (viewDateEl && viewDateEl.value) {
+                const iso = new Date(viewDateEl.value.replace(' ', 'T')).toISOString();
+                if (iso) payload.date = iso;
+            }
+        } catch (_) {}
+
+        // Basic client checks mirroring backend
+        if (!payload.description || !payload.description.trim()) {
+            alert('Description cannot be empty');
+            return;
+        }
+        if (typeof payload.amount !== 'undefined' && (!isFinite(payload.amount) || payload.amount <= 0)) {
+            alert('Amount must be a positive number');
+            return;
+        }
+        if (!payload.participants || payload.participants.length === 0) {
+            alert('Select at least one participant');
+            return;
+        }
+
+        const prevDisabled = saveBtn.disabled;
+        saveBtn.disabled = true;
+        try {
+            await apiRequest(`groups/${groupId}/expenses/${expenseId}`, 'PATCH', payload);
+            toggleExpenseViewModal(false);
+            await showGroupExpenses(groupId, groupName);
+        } catch (error) {
+            const msg = String(error.message || 'Failed to update expense');
+            if (inlineError) {
+                inlineError.textContent = msg;
+                inlineError.classList.remove('hidden');
+            }
+        } finally {
+            saveBtn.disabled = prevDisabled;
+        }
+    }
+
+    if (DOM.saveExpenseBtn) {
+        DOM.saveExpenseBtn.addEventListener('click', handleSaveExpense);
+    }
+    
     // Initialize Flatpickr for optional date/time (Add Expense modal)
     if (window.flatpickr) {
         expenseDatePicker = window.flatpickr('#expense-date', {

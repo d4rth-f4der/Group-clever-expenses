@@ -158,6 +158,94 @@ router.delete('/:groupId/expenses/:expenseId', protect, async (req, res) => {
 	}
 });
 
+// Update existing expense
+router.patch('/:groupId/expenses/:expenseId', protect, async (req, res) => {
+    const { groupId, expenseId } = req.params;
+    const { description, amount, payer, participants, date } = req.body;
+
+    try {
+        const group = await Group.findById(groupId);
+        if (!group) return res.status(404).json({ message: 'Group not found' });
+
+        const isMember = group.members.map(String).includes(String(req.user._id));
+        if (!isMember) {
+            return res.status(403).json({ message: 'Not authorised to update expenses in this group' });
+        }
+
+        const expense = await Expense.findOne({ _id: expenseId, group: groupId });
+        if (!expense) {
+            return res.status(404).json({ message: 'Expense not found' });
+        }
+
+        // Any group member can update expense details (no admin/payer restriction)
+
+        if (typeof description !== 'undefined') {
+            if (!description || !String(description).trim()) {
+                return res.status(400).json({ message: 'Description cannot be empty' });
+            }
+            expense.description = String(description).trim();
+        }
+
+        if (typeof amount !== 'undefined') {
+            const num = Number(amount);
+            if (!isFinite(num) || num <= 0) {
+                return res.status(400).json({ message: 'Amount must be a positive number' });
+            }
+            expense.amount = num;
+        }
+
+        if (typeof payer !== 'undefined') {
+            if (!group.members.map(String).includes(String(payer))) {
+                return res.status(400).json({ message: 'payer must be member of this group' });
+            }
+            expense.payer = payer;
+        }
+
+        if (typeof participants !== 'undefined') {
+            if (!Array.isArray(participants) || participants.length === 0) {
+                return res.status(400).json({ message: 'participants must be a non-empty array' });
+            }
+            const invalid = participants.filter(pId => !group.members.map(String).includes(String(pId)));
+            if (invalid.length > 0) {
+                return res.status(400).json({ message: "some participants aren't in this group" });
+            }
+            expense.participants = participants.map(pId => ({ user: pId }));
+        }
+
+        if (typeof date !== 'undefined') {
+            if (!date) {
+                expense.date = undefined;
+            } else {
+                const expenseDate = new Date(date);
+                if (expenseDate.toString() === 'Invalid Date') {
+                    return res.status(400).json({ message: 'Invalid date format. Use YYYY-MM-DD (or YYYY-MM-DDTHH:MM:SSZ).' });
+                }
+                expense.date = expenseDate;
+            }
+        }
+
+        await expense.save();
+
+        const populated = await Expense.findById(expense._id)
+            .populate('payer', 'username email')
+            .populate('participants.user', 'username email');
+
+        return res.status(200).json({
+            _id: populated._id,
+            description: populated.description,
+            amount: populated.amount,
+            group: populated.group,
+            payer: populated.payer,
+            participants: populated.participants,
+            date: populated.date,
+            message: 'Expense updated successfully'
+        });
+    } catch (err) {
+        console.error('Update expense error:', err);
+        return res.status(500).json({ message: 'Server error on attempt to update expense' });
+    }
+});
+
 // Delete entire group by ID (admin only)
 router.delete('/:groupId', protect, async (req, res) => {
     const { groupId } = req.params;
