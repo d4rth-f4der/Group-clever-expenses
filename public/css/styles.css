@@ -101,20 +101,10 @@ h1 {
     100% { transform: rotate(360deg); }
 }
 #groups-container {
-    display: grid;
-    gap: 24px;
+    display: block;
 }
 
-@media (min-width: 768px) {
-    #groups-container {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-@media (min-width: 1024px) {
-    #groups-container {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
+/* Removed grid layout for groups; items render stacked like the expense list */
 .group-card {
     background-color: #ffffff;
     padding: 24px;
@@ -281,6 +271,43 @@ h1 {
     padding: 16px 20px !important;
 }
 
+/* Group list items styled similar to expense items */
+.group-item {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.group-item:hover {
+    background-color: #f2f6f7;
+    border-color: #c7cacf;
+    transform: translateY(-1px);
+}
+
+/* Larger group title */
+.group-item .expense-description {
+    font-size: 1.4rem;
+}
+
+/* Member chips layout */
+.group-item .group-members {
+    gap: 8px;
+}
+
+/* Align members next to the label inside group list */
+.group-item .expense-details {
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.group-item .participant-username {
+    background-color: #cce7f1;
+}
+
 .expense-main {
     display: flex;
     justify-content: space-between;
@@ -345,6 +372,11 @@ h1 {
 .participant-username {
     background-color: #dedede;
     color: #454249;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.4;
 }
 
 .expense-date {

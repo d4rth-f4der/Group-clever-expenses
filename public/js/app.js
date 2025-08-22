@@ -60,10 +60,11 @@ function showConfirm(message = 'Are you sure?', options = {}) {
 }
 
 function attachGroupCardListeners() {
-    const allGroupCards = document.querySelectorAll('.group-card');
+    const allGroupCards = document.querySelectorAll('.group-item');
     allGroupCards.forEach(card => card.addEventListener('click', () => {
-        const groupId = card.querySelector('.group-id span').textContent;
-        const groupName = card.querySelector('h2').textContent;
+        const groupId = card.dataset.groupId;
+        const nameEl = card.querySelector('.expense-description');
+        const groupName = nameEl ? nameEl.textContent : '';
         handleGroupClick(groupId, groupName);
     }));
 }

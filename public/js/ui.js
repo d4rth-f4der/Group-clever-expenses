@@ -81,18 +81,28 @@ export function renderGroups(groups) {
     }
 
     groups.forEach(group => {
-        const groupCard = document.createElement('div');
-        groupCard.className = 'group-card';
-        groupCard.innerHTML = `
-            <h2>${group.name}</h2>
-            <div class="group-id">Group ID: <span>${group._id}</span></div>
-            <p>Members:</p>
-            <ul>
-                ${group.members.map(member => `<li>${member.username} (${member.email})</li>`).join('')}
-            </ul>
+        const item = document.createElement('div');
+        item.className = 'expense-item group-item';
+        item.dataset.groupId = group._id;
+        item.innerHTML = `
+            <div class="expense-main">
+                <div class="expense-description">${group.name}</div>
+            </div>
+            <div class="expense-details" style="margin-top:6px;">
+                <div class="label" style="margin-right:8px;">Members:</div>
+                <div class="expense-participants group-members"></div>
+            </div>
         `;
 
-        DOM.groupsContainer.appendChild(groupCard);
+        const membersWrap = item.querySelector('.group-members');
+        (group.members || []).forEach(m => {
+            const chip = document.createElement('span');
+            chip.className = 'participant-username';
+            chip.textContent = `${m.username} (${m.email})`;
+            membersWrap.appendChild(chip);
+        });
+
+        DOM.groupsContainer.appendChild(item);
     });
 }
 
