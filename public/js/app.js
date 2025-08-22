@@ -6,6 +6,47 @@ let currentUser = null;
 let expenseDatePicker = null;
 let newGroupParticipants = [];
 
+// Small helper to show custom confirm modal and return a Promise<boolean>
+function showConfirm(message = 'Are you sure?') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const msgEl = document.getElementById('confirm-message');
+        const yesBtn = document.getElementById('confirm-yes-btn');
+        const cancelBtn = document.getElementById('confirm-cancel-btn');
+        const closeBtn = document.getElementById('close-confirm-btn');
+
+        if (!modal || !msgEl || !yesBtn || !cancelBtn || !closeBtn) {
+            // Fallback to native confirm if modal missing
+            resolve(window.confirm(message));
+            return;
+        }
+
+        msgEl.textContent = message;
+        modal.classList.remove('hidden');
+
+        const cleanup = () => {
+            modal.classList.add('hidden');
+            yesBtn.removeEventListener('click', onYes);
+            cancelBtn.removeEventListener('click', onNo);
+            closeBtn.removeEventListener('click', onNo);
+            modal.removeEventListener('click', onOverlayClick);
+        };
+
+        const onYes = () => { cleanup(); resolve(true); };
+        const onNo = () => { cleanup(); resolve(false); };
+        const onOverlayClick = (e) => {
+            if (e.target === modal) {
+                onNo();
+            }
+        };
+
+        yesBtn.addEventListener('click', onYes);
+        cancelBtn.addEventListener('click', onNo);
+        closeBtn.addEventListener('click', onNo);
+        modal.addEventListener('click', onOverlayClick);
+    });
+}
+
 function attachGroupCardListeners() {
     const allGroupCards = document.querySelectorAll('.group-card');
     allGroupCards.forEach(card => card.addEventListener('click', () => {
@@ -167,7 +208,7 @@ async function initializeApp() {
     
     window.addEventListener('popstate', handleRoute);
 
-    DOM.expenseDetailsContainer.addEventListener('click', (e) => {
+    DOM.expenseDetailsContainer.addEventListener('click', async (e) => {
         if (e.target.id === 'add-expense-btn') {
             renderPayerSelect(currentGroupMembers);
             renderParticipants(currentGroupMembers);
@@ -175,6 +216,40 @@ async function initializeApp() {
             if (expenseDatePicker) {
                 expenseDatePicker.clear();
             }
+        } else if (e.target.id === 'delete-group-btn') {
+            const { groupId } = history.state || {};
+            if (!groupId) return;
+
+            const confirmed = await showConfirm('Are you sure you want to delete this group? This action cannot be undone.');
+            if (!confirmed) return;
+
+            const inlineError = document.getElementById('group-delete-error');
+            if (inlineError) {
+                inlineError.textContent = '';
+                inlineError.classList.add('hidden');
+            }
+
+            const btn = e.target;
+            const prevDisabled = btn.disabled;
+            btn.disabled = true;
+
+            (async () => {
+                try {
+                    await apiRequest(`groups/${groupId}`, 'DELETE');
+                    // Success: go back to groups list and refresh
+                    history.pushState({ screen: 'groups' }, '', '/');
+                    await fetchGroups();
+                } catch (error) {
+                    // Keep user on the same page; show inline error
+                    const msg = String(error.message || 'Failed to delete group');
+                    if (inlineError) {
+                        inlineError.textContent = msg.includes('Only group admin') ? 'cannot delete - no admin rights' : msg;
+                        inlineError.classList.remove('hidden');
+                    }
+                } finally {
+                    btn.disabled = prevDisabled;
+                }
+            })();
         }
     });
 

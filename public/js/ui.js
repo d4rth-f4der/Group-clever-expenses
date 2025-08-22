@@ -149,6 +149,10 @@ export function renderGroupDetails(groupName, expenses, transactions) {
         <ul>${expensesHtml || '<li>No expenses yet.</li>'}</ul>
         <h3>Who owes who</h3>
         <ul>${transactionsHtml || '<li>All even.</li>'}</ul>
+        <div id="group-delete-error" class="inline-error hidden" role="alert"></div>
+        <div class="footer-actions">
+            <button id="delete-group-btn" class="delete-btn" title="Delete this group">Delete Group</button>
+        </div>
     `;
     
     document.getElementById('back-to-groups-btn').addEventListener('click', () => history.back());
