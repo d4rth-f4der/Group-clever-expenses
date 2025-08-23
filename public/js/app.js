@@ -323,17 +323,7 @@ async function initializeApp() {
         }
     });
 
-    DOM.addExpenseModal.querySelector('.close-btn').addEventListener('click', () => {
-        toggleModal(false);
-    });
-
-    DOM.addExpenseModal.querySelector('#cancel-expense-btn').addEventListener('click', () => {
-        toggleModal(false);
-    });
-
-    DOM.closeExpenseViewBtn.addEventListener('click', () => {
-        toggleExpenseViewModal(false);
-    });
+    // Close/cancel handlers for Add Expense and Expense View modals are attached in their respective modules
 
     // New Group Modal Events
     DOM.newGroupBtn.addEventListener('click', async () => {
@@ -361,13 +351,7 @@ async function initializeApp() {
         }
     });
 
-    DOM.closeNewGroupBtn.addEventListener('click', () => {
-        toggleNewGroupModal(false);
-    });
-
-    DOM.cancelNewGroupBtn.addEventListener('click', () => {
-        toggleNewGroupModal(false);
-    });
+    // Close/cancel handlers for New Group modal are attached in its module
 
     // Add participant in New Group modal
     DOM.addParticipantBtn.addEventListener('click', async () => {
