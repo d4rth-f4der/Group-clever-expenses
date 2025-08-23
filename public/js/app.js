@@ -1,6 +1,7 @@
 import { apiRequest, findUserByName } from './api.js';
 import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants, toggleNewGroupModal, renderGroupParticipants } from './ui.js';
 import { setState, getState, subscribe } from './state/store.js';
+import { initRouter, navigateToGroup, navigateToGroups, replaceToRoot } from './router/router.js';
 
 let currentGroupMembers = [];
 let currentUser = null;
@@ -117,8 +118,7 @@ async function handleLogin(e) {
         const data = await apiRequest('auth/login', 'POST', { email, password });
         localStorage.setItem('userToken', data.token);
         localStorage.setItem('userId', data._id);
-        history.pushState({ screen: 'groups' }, '', '/');
-        handleRoute();
+        await navigateToGroups();
     } catch (error) {
         console.error('Login error:', error);
         DOM.loginError.textContent = error.message;
@@ -133,8 +133,7 @@ function handleLogout() {
 }
 
 function handleGroupClick(groupId, groupName) {
-    history.pushState({ screen: 'expenses', groupId, groupName }, '', `/groups/${groupId}`);
-    showGroupExpenses(groupId, groupName);
+    navigateToGroup(groupId, groupName);
 }
 
 async function handleAddExpense(e) {
@@ -190,23 +189,7 @@ async function handleAddExpense(e) {
     }
 }
 
-async function handleRoute() {
-    const token = localStorage.getItem('userToken');
-    if (!token) {
-        setState({ isLoggedIn: false });
-        return;
-    }
-    setState({ isLoggedIn: true });
-
-    const path = window.location.pathname;
-    if (path.startsWith('/groups/')) {
-        const groupId = path.split('/')[2];
-        const groupName = history.state?.groupName || 'Group Details';
-        await showGroupExpenses(groupId, groupName);
-    } else {
-        await fetchGroups();
-    }
-}
+// Router handlers are provided at init time
 
 async function initializeApp() {
     // Get current user info
@@ -233,7 +216,27 @@ async function initializeApp() {
     DOM.loginForm.addEventListener('submit', handleLogin);
     DOM.logoutBtn.addEventListener('click', handleLogout);
     
-    window.addEventListener('popstate', handleRoute);
+    // Initialize router with handlers
+    await initRouter({
+        onGroups: async () => {
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                setState({ isLoggedIn: false });
+                return;
+            }
+            setState({ isLoggedIn: true });
+            await fetchGroups();
+        },
+        onGroup: async (groupId, groupName) => {
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                setState({ isLoggedIn: false });
+                return;
+            }
+            setState({ isLoggedIn: true });
+            await showGroupExpenses(groupId, groupName);
+        }
+    });
 
     // Global unauthorized handler: if any API call returns 401, force login view
     window.addEventListener('api:unauthorized', () => {
@@ -245,7 +248,7 @@ async function initializeApp() {
             DOM.loginError.textContent = 'Your session has expired. Please log in again.';
         }
         // Reset route to root without reloading
-        try { history.replaceState({}, '', '/'); } catch (_) {}
+        replaceToRoot();
     });
 
     DOM.expenseDetailsContainer.addEventListener('click', async (e) => {
@@ -276,9 +279,8 @@ async function initializeApp() {
             (async () => {
                 try {
                     await apiRequest(`groups/${groupId}`, 'DELETE');
-                    // Success: go back to groups list and refresh
-                    history.pushState({ screen: 'groups' }, '', '/');
-                    await fetchGroups();
+            // Success: go back to groups list and refresh
+            await navigateToGroups();
                 } catch (error) {
                     // Keep user on the same page; show inline error
                     const msg = String(error.message || 'Failed to delete group');
@@ -317,8 +319,7 @@ async function initializeApp() {
             await apiRequest('groups', 'POST', { name, members });
             toggleNewGroupModal(false);
             // Refresh groups list and view
-            history.pushState({ screen: 'groups' }, '', '/');
-            await fetchGroups();
+            await navigateToGroups();
         } catch (error) {
             console.error('Failed to create group:', error);
             alert(error.message || 'Failed to create group');
@@ -523,7 +524,7 @@ async function initializeApp() {
         }
     }
 
-    handleRoute();
+    // First route was handled by initRouter
 }
 
 document.addEventListener('DOMContentLoaded', initializeApp);
