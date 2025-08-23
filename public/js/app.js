@@ -2,8 +2,10 @@ import { apiRequest, findUserByName } from './api.js';
 import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants, toggleNewGroupModal, renderGroupParticipants } from './ui.js';
 import { setState, getState, subscribe } from './state/store.js';
 import { initRouter, navigateToGroup, navigateToGroups, replaceToRoot } from './router/router.js';
+import { handleLogin, handleLogout } from './controllers/authController.js';
+import { fetchGroups } from './controllers/groupsController.js';
+import { showGroupExpenses, getCurrentGroupMembers } from './controllers/expensesController.js';
 
-let currentGroupMembers = [];
 let currentUser = null;
 let expenseDatePicker = null; // for Add Expense modal
 let expenseViewDatePicker = null; // for Expense Details modal
@@ -61,80 +63,11 @@ function showConfirm(message = 'Are you sure?', options = {}) {
     });
 }
 
-function attachGroupCardListeners() {
-    const allGroupCards = document.querySelectorAll('.group-item');
-    allGroupCards.forEach(card => card.addEventListener('click', () => {
-        const groupId = card.dataset.groupId;
-        const nameEl = card.querySelector('.expense-description');
-        const groupName = nameEl ? nameEl.textContent : '';
-        handleGroupClick(groupId, groupName);
-    }));
-}
+// moved to controllers/groupsController.js and controllers/expensesController.js
 
-async function fetchGroups() {
-    try {
-        setState({ loading: true });
-        const groups = await apiRequest('groups');
-        setState({ loading: false });
-        renderGroups(groups);
-        attachGroupCardListeners();
-    } catch (error) {
-        displayError(error.message);
-    }
-}
+// moved to controllers/authController.js
 
-async function showGroupExpenses(groupId, groupName) {
-    try {
-        setState({ loading: true });
-        const [expensesData, balancesData] = await Promise.all([
-            apiRequest(`groups/${groupId}/expenses`),
-            apiRequest(`groups/${groupId}/balances`)
-        ]);
-        
-        const expenses = expensesData;
-        const transactions = balancesData.debts;
-        const groupMembers = balancesData.group.members; 
-        
-        currentGroupMembers = groupMembers;
-
-        history.replaceState({ screen: 'expenses', groupId, groupName, groupMembers }, '', `/groups/${groupId}`);
-
-        setState({ loading: false });
-        renderGroupDetails(groupName, expenses, transactions, groupMembers);
-        
-    } catch (error) {
-        displayError(error.message);
-        renderGroupDetails(groupName, [], []);
-    }
-}
-
-async function handleLogin(e) {
-    e.preventDefault();
-    const email = DOM.loginForm.querySelector('#email').value;
-    const password = DOM.loginForm.querySelector('#password').value;
-    
-    try {
-        DOM.loginError.textContent = '';
-        const data = await apiRequest('auth/login', 'POST', { email, password });
-        localStorage.setItem('userToken', data.token);
-        localStorage.setItem('userId', data._id);
-        await navigateToGroups();
-    } catch (error) {
-        console.error('Login error:', error);
-        DOM.loginError.textContent = error.message;
-    }
-}
-
-function handleLogout() {
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userId');
-    setState({ isLoggedIn: false });
-    history.pushState({ screen: 'login' }, '', '/');
-}
-
-function handleGroupClick(groupId, groupName) {
-    navigateToGroup(groupId, groupName);
-}
+// moved to controllers/groupsController.js
 
 async function handleAddExpense(e) {
     e.preventDefault();
@@ -240,11 +173,12 @@ async function initializeApp() {
 
     // Global unauthorized handler: if any API call returns 401, force login view
     window.addEventListener('api:unauthorized', () => {
+        const wasLoggedIn = !!getState().isLoggedIn;
         try { setState({ loading: false, isLoggedIn: false }); } catch (_) {}
         try { toggleModal(false); } catch (_) {}
         try { toggleExpenseViewModal(false); } catch (_) {}
         try { toggleNewGroupModal(false); } catch (_) {}
-        if (DOM.loginError) {
+        if (wasLoggedIn && DOM.loginError) {
             DOM.loginError.textContent = 'Your session has expired. Please log in again.';
         }
         // Reset route to root without reloading
@@ -253,9 +187,10 @@ async function initializeApp() {
 
     DOM.expenseDetailsContainer.addEventListener('click', async (e) => {
         if (e.target.id === 'add-expense-btn') {
-            renderPayerSelect(currentGroupMembers);
-            renderParticipants(currentGroupMembers);
-            toggleModal(true, currentGroupMembers);
+            const members = getCurrentGroupMembers();
+            renderPayerSelect(members);
+            renderParticipants(members);
+            toggleModal(true, members);
             if (expenseDatePicker) {
                 expenseDatePicker.clear();
             }
