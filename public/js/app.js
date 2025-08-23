@@ -1,5 +1,6 @@
 import { apiRequest, findUserByName } from './api.js';
 import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants, toggleNewGroupModal, renderGroupParticipants } from './ui.js';
+import { setState, getState, subscribe } from './state/store.js';
 
 let currentGroupMembers = [];
 let currentUser = null;
@@ -71,9 +72,9 @@ function attachGroupCardListeners() {
 
 async function fetchGroups() {
     try {
-        toggleLoading(true);
+        setState({ loading: true });
         const groups = await apiRequest('groups');
-        toggleLoading(false);
+        setState({ loading: false });
         renderGroups(groups);
         attachGroupCardListeners();
     } catch (error) {
@@ -83,7 +84,7 @@ async function fetchGroups() {
 
 async function showGroupExpenses(groupId, groupName) {
     try {
-        toggleLoading(true);
+        setState({ loading: true });
         const [expensesData, balancesData] = await Promise.all([
             apiRequest(`groups/${groupId}/expenses`),
             apiRequest(`groups/${groupId}/balances`)
@@ -97,7 +98,7 @@ async function showGroupExpenses(groupId, groupName) {
 
         history.replaceState({ screen: 'expenses', groupId, groupName, groupMembers }, '', `/groups/${groupId}`);
 
-        toggleLoading(false);
+        setState({ loading: false });
         renderGroupDetails(groupName, expenses, transactions, groupMembers);
         
     } catch (error) {
@@ -125,9 +126,9 @@ async function handleLogin(e) {
 }
 
 function handleLogout() {
-    toggleUI(false);
     localStorage.removeItem('userToken');
     localStorage.removeItem('userId');
+    setState({ isLoggedIn: false });
     history.pushState({ screen: 'login' }, '', '/');
 }
 
@@ -178,22 +179,24 @@ async function handleAddExpense(e) {
     }
     
     try {
-        toggleLoading(true);
+        setState({ loading: true });
         await apiRequest(`groups/${groupId}/expenses`, 'POST', expenseData);
         await showGroupExpenses(groupId, groupName);
         toggleModal(false);
     } catch (error) {
         displayError(error.message);
+    } finally {
+        setState({ loading: false });
     }
 }
 
 async function handleRoute() {
     const token = localStorage.getItem('userToken');
     if (!token) {
-        toggleUI(false);
+        setState({ isLoggedIn: false });
         return;
     }
-    toggleUI(true);
+    setState({ isLoggedIn: true });
 
     const path = window.location.pathname;
     if (path.startsWith('/groups/')) {
@@ -216,6 +219,17 @@ async function initializeApp() {
         console.error('Failed to get current user:', error);
     }
 
+    // Reflect store -> UI
+    subscribe((s) => {
+        try { toggleUI(!!s.isLoggedIn); } catch (_) {}
+        try { toggleLoading(!!s.loading); } catch (_) {}
+    });
+    // Initialize login state from token
+    try {
+        const token = localStorage.getItem('userToken');
+        setState({ isLoggedIn: !!token });
+    } catch (_) {}
+
     DOM.loginForm.addEventListener('submit', handleLogin);
     DOM.logoutBtn.addEventListener('click', handleLogout);
     
@@ -223,14 +237,13 @@ async function initializeApp() {
 
     // Global unauthorized handler: if any API call returns 401, force login view
     window.addEventListener('api:unauthorized', () => {
-        try { toggleLoading(false); } catch (_) {}
+        try { setState({ loading: false, isLoggedIn: false }); } catch (_) {}
         try { toggleModal(false); } catch (_) {}
         try { toggleExpenseViewModal(false); } catch (_) {}
         try { toggleNewGroupModal(false); } catch (_) {}
         if (DOM.loginError) {
             DOM.loginError.textContent = 'Your session has expired. Please log in again.';
         }
-        toggleUI(false);
         // Reset route to root without reloading
         try { history.replaceState({}, '', '/'); } catch (_) {}
     });
@@ -300,7 +313,7 @@ async function initializeApp() {
         const members = newGroupParticipants.map(u => u._id);
 
         try {
-            toggleLoading(true);
+            setState({ loading: true });
             await apiRequest('groups', 'POST', { name, members });
             toggleNewGroupModal(false);
             // Refresh groups list and view
@@ -310,7 +323,7 @@ async function initializeApp() {
             console.error('Failed to create group:', error);
             alert(error.message || 'Failed to create group');
         } finally {
-            toggleLoading(false);
+            setState({ loading: false });
         }
     });
 
