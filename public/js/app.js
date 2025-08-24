@@ -1,11 +1,12 @@
 import { apiRequest, findUserByName } from './api.js';
-import { toggleUI, toggleLoading, DOM, toggleModal, toggleExpenseViewModal, toggleNewGroupModal, renderGroupParticipants } from './ui.js';
+import { toggleUI, toggleLoading, DOM, toggleModal, toggleExpenseViewModal, toggleNewGroupModal, renderGroupParticipants, displayError } from './ui.js';
 import { setState, getState, subscribe } from './state/store.js';
 import { initRouter, navigateToGroups, replaceToRoot } from './router/router.js';
 import { handleLogin, handleLogout } from './controllers/authController.js';
 import { fetchGroups } from './controllers/groupsController.js';
 import { showGroupExpenses, handleAddExpense, handleDeleteExpense, handleSaveExpense, openAddExpenseModal } from './controllers/expensesController.js';
 import { showConfirm } from './utils/confirm.js';
+import { showInlineError, clearInlineError } from './utils/notify.js';
 
 // Flatpickr instances (declared to avoid ReferenceError in module scope)
 let expenseDatePicker = null;
@@ -68,8 +69,12 @@ async function initializeApp() {
         try { toggleExpenseViewModal(false); } catch (_) { }
         try { toggleNewGroupModal(false); } catch (_) { }
         if (wasLoggedIn && DOM.loginError) {
-            DOM.loginError.textContent = 'Your session has expired. Please log in again.';
+            showInlineError(DOM.loginError, 'Your session has expired. Please log in again.');
         }
+        // Ensure no leftover UI parts remain visible
+        try { DOM.groupsContainer.classList.add('hidden'); } catch (_) {}
+        try { DOM.expenseDetailsContainer.classList.add('hidden'); } catch (_) {}
+        try { DOM.errorMessage.classList.add('hidden'); DOM.errorMessage.textContent = ''; } catch (_) {}
         // Reset route to root without reloading
         replaceToRoot();
     });
@@ -84,11 +89,7 @@ async function initializeApp() {
             const confirmed = await showConfirm('Are you sure you want to delete this group? This action cannot be undone.');
             if (!confirmed) return;
 
-            const inlineError = document.getElementById('group-delete-error');
-            if (inlineError) {
-                inlineError.textContent = '';
-                inlineError.classList.add('hidden');
-            }
+            clearInlineError('group-delete-error');
 
             const btn = e.target;
             const prevDisabled = btn.disabled;
@@ -96,16 +97,12 @@ async function initializeApp() {
 
             (async () => {
                 try {
+                    // Do not toggle global loading here to keep current view visible
                     await apiRequest(`groups/${groupId}`, 'DELETE');
-                    // Success: go back to groups list and refresh
                     await navigateToGroups();
                 } catch (error) {
-                    // Keep user on the same page; show inline error
-                    const msg = String(error.message || 'Failed to delete group');
-                    if (inlineError) {
-                        inlineError.textContent = msg.includes('Only group admin') ? 'cannot delete - no admin rights' : msg;
-                        inlineError.classList.remove('hidden');
-                    }
+                    console.error('Failed to delete group:', error);
+                    showInlineError('group-delete-error', error.message || 'Failed to delete group');
                 } finally {
                     btn.disabled = prevDisabled;
                 }
@@ -120,13 +117,13 @@ async function initializeApp() {
         const nameInput = document.getElementById('group-name');
         const name = nameInput?.value.trim();
         if (!name) {
-            alert('Please enter a group name.');
+            showInlineError('new-group-error', 'Please enter a group name.');
             return;
         }
 
         // Ensure at least one member (current user already included)
         if (!newGroupParticipants || newGroupParticipants.length === 0) {
-            alert('Please add at least one participant.');
+            showInlineError('new-group-error', 'Please add at least one participant.');
             return;
         }
 
@@ -140,7 +137,7 @@ async function initializeApp() {
             await navigateToGroups();
         } catch (error) {
             console.error('Failed to create group:', error);
-            alert(error.message || 'Failed to create group');
+            showInlineError('new-group-error', error.message || 'Failed to create group');
         } finally {
             setState({ loading: false });
         }
@@ -166,7 +163,7 @@ async function initializeApp() {
                 }
             } catch (error) {
                 console.error('Failed to get current user:', error);
-                alert('Failed to load user information. Please refresh the page.');
+                displayError('Failed to load user information. Please refresh the page.');
                 return;
             }
         }
@@ -176,35 +173,40 @@ async function initializeApp() {
             // Initialize participants with current user
             newGroupParticipants = [currentUser];
             renderGroupParticipants(newGroupParticipants);
+            clearInlineError('new-group-error');
         } else {
-            alert('Please log in first.');
+            displayError('Please log in first.');
         }
     });
 
     // Add participant in New Group modal
     DOM.addParticipantBtn.addEventListener('click', async () => {
         const input = DOM.addParticipantInput.value.trim();
-        if (!input) return;
+        if (!input) {
+            showInlineError('new-group-error', 'Enter a username to add.');
+            return;
+        }
 
         // Prevent adding duplicates by username
         if (newGroupParticipants.some(p => p.username.toLowerCase() === input.toLowerCase())) {
-            alert('This participant is already added.');
+            showInlineError('new-group-error', 'This participant is already added.');
             return;
         }
 
         try {
             const user = await findUserByName(input);
             if (!user) {
-                alert('username not found');
+                showInlineError('new-group-error', 'Username not found');
                 return;
             }
 
             newGroupParticipants.push(user);
             renderGroupParticipants(newGroupParticipants);
             DOM.addParticipantInput.value = '';
+            clearInlineError('new-group-error');
         } catch (e) {
             console.error(e);
-            alert('Failed to validate username. Please try again.');
+            showInlineError('new-group-error', 'Failed to validate username. Please try again.');
         }
     });
 

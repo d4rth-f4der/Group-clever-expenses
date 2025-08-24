@@ -3,6 +3,7 @@ import { apiRequest } from '../api.js';
 import { setState } from '../state/store.js';
 import { navigateToGroups, replaceToRoot } from '../router/router.js';
 import { DOM } from '../ui.js';
+import { showInlineError, clearInlineError } from '../utils/notify.js';
 
 export async function handleLogin(e) {
   e.preventDefault();
@@ -10,7 +11,12 @@ export async function handleLogin(e) {
   const password = DOM.loginForm.querySelector('#password').value;
 
   try {
-    DOM.loginError.textContent = '';
+    clearInlineError(DOM.loginError);
+    // Basic client validation instead of native popups (novalidate)
+    if (!email || !password) {
+      showInlineError(DOM.loginError, 'Email and password are required.');
+      return;
+    }
     const data = await apiRequest('auth/login', 'POST', { email, password });
     localStorage.setItem('userToken', data.token);
     localStorage.setItem('userId', data._id);
@@ -18,7 +24,7 @@ export async function handleLogin(e) {
     await navigateToGroups();
   } catch (error) {
     console.error('Login error:', error);
-    DOM.loginError.textContent = error.message;
+    showInlineError(DOM.loginError, error.message || 'Login failed');
   }
 }
 

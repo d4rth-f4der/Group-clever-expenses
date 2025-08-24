@@ -21,12 +21,12 @@
         </div>
 
         <div id="login-container">
-            <form id="login-form" class="login-form">
+            <form id="login-form" class="login-form" novalidate>
                 <h2>Login</h2>
                 <input type="email" id="email" placeholder="Email" required>
                 <input type="password" id="password" placeholder="Password" required>
                 <button type="submit">Confirm</button>
-                <p id="login-error"></p>
+                <p id="login-error" class="inline-error hidden" role="alert"></p>
             </form>
         </div>
 
@@ -46,7 +46,7 @@
                 <h2>Add new expense</h2>
                 <button id="close-modal-btn" class="close-btn">&times;</button>
             </div>
-            <form id="add-expense-form">
+            <form id="add-expense-form" novalidate>
                 <label for="expense-description">Description:</label>
                 <input type="text" id="expense-description" placeholder="Dinner at restaurant" required>
 
@@ -61,6 +61,8 @@
 
                 <label for="expense-date">Date/time:</label>
                 <input type="text" id="expense-date" placeholder="YYYY-MM-DD HH:MM">
+
+                <div id="add-expense-error" class="inline-error hidden" role="alert"></div>
 
                 <div class="modal-actions">
                     <button type="button" id="cancel-expense-btn" class="cancel-btn">Cancel</button>
@@ -128,7 +130,7 @@
                 <h2>Create New Group</h2>
                 <button id="close-new-group-btn" class="close-btn">&times;</button>
             </div>
-            <form id="new-group-form">
+            <form id="new-group-form" novalidate>
                 <label for="group-name" style="color: #6b7280;">Group name:</label>
                 <input type="text" id="group-name" placeholder="Weekend Trip" required>
 
@@ -142,6 +144,8 @@
                     <input type="text" id="add-participant-input" placeholder="Enter username">
                     <button type="button" id="add-participant-btn">Add</button>
                 </div>
+
+                <div id="new-group-error" class="inline-error hidden" role="alert"></div>
 
                 <div class="modal-actions">
                     <button type="button" id="cancel-new-group-btn" class="cancel-btn">Cancel</button>

@@ -1,7 +1,7 @@
 // Groups controller: list and navigation
 import { apiRequest } from '../api.js';
 import { setState } from '../state/store.js';
-import { renderGroups } from '../ui.js';
+import { renderGroups, displayError } from '../ui.js';
 import { navigateToGroup } from '../router/router.js';
 
 function attachGroupCardListeners() {
@@ -26,7 +26,7 @@ export async function fetchGroups() {
   } catch (error) {
     // displayError is UI-level; keep error visible via alert/console to avoid circular deps
     console.error(error);
-    alert(error.message || 'Failed to load groups');
+    displayError(error.message || 'Failed to load groups');
     setState({ loading: false });
   }
 }

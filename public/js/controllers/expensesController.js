@@ -3,6 +3,7 @@ import { apiRequest } from '../api.js';
 import { setState } from '../state/store.js';
 import { renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants } from '../ui.js';
 import { showConfirm } from '../utils/confirm.js';
+import { showInlineError, clearInlineError } from '../utils/notify.js';
 
 let currentGroupMembers = [];
 export function getCurrentGroupMembers() {
@@ -22,12 +23,12 @@ export async function handleAddExpense(e) {
   const participants = Array.from(selectedParticipantsElements).map((el) => el.getAttribute('data-id'));
 
   if (!description || isNaN(amount) || amount <= 0) {
-    alert('Please enter a valid description and amount.');
+    showInlineError('add-expense-error', 'Please enter a valid description and amount.');
     return;
   }
 
   if (participants.length === 0) {
-    alert('Please select at least one participant.');
+    showInlineError('add-expense-error', 'Please select at least one participant.');
     return;
   }
 
@@ -52,9 +53,10 @@ export async function handleAddExpense(e) {
     await apiRequest(`groups/${groupId}/expenses`, 'POST', expenseData);
     await showGroupExpenses(groupId, groupName);
     toggleModal(false);
+    clearInlineError('add-expense-error');
   } catch (error) {
     console.error(error);
-    alert(error.message || 'Failed to add expense');
+    showInlineError('add-expense-error', error.message || 'Failed to add expense');
   } finally {
     setState({ loading: false });
   }
@@ -88,6 +90,9 @@ export async function handleDeleteExpense() {
     toggleExpenseViewModal(false);
     await showGroupExpenses(groupId, groupName);
   } catch (error) {
+    if (error && error.status === 401) {
+      return;
+    }
     const msg = String(error.message || 'Failed to delete expense');
     if (inlineError) {
       inlineError.textContent = msg;
@@ -138,15 +143,15 @@ export async function handleSaveExpense() {
 
   // Basic client checks mirroring backend
   if (!payload.description || !payload.description.trim()) {
-    alert('Description cannot be empty');
+    showInlineError('expense-delete-error', 'Description cannot be empty');
     return;
   }
   if (typeof payload.amount !== 'undefined' && (!isFinite(payload.amount) || payload.amount <= 0)) {
-    alert('Amount must be a positive number');
+    showInlineError('expense-delete-error', 'Amount must be a positive number');
     return;
   }
   if (!payload.participants || payload.participants.length === 0) {
-    alert('Select at least one participant');
+    showInlineError('expense-delete-error', 'Select at least one participant');
     return;
   }
 
@@ -156,6 +161,7 @@ export async function handleSaveExpense() {
     await apiRequest(`groups/${groupId}/expenses/${expenseId}`, 'PATCH', payload);
     toggleExpenseViewModal(false);
     await showGroupExpenses(groupId, groupName);
+    clearInlineError('expense-delete-error');
   } catch (error) {
     const msg = String(error.message || 'Failed to update expense');
     if (inlineError) {
@@ -180,6 +186,8 @@ export function openAddExpenseModal() {
   } else if (dateInput) {
     dateInput.value = '';
   }
+  // Clear previous inline errors
+  try { clearInlineError('add-expense-error'); } catch (_) {}
 }
 
 export async function showGroupExpenses(groupId, groupName) {
@@ -189,6 +197,15 @@ export async function showGroupExpenses(groupId, groupName) {
       apiRequest(`groups/${groupId}/expenses`),
       apiRequest(`groups/${groupId}/balances`),
     ]);
+    // If a 401 happened during the above calls, the app state may already be logged out.
+    // Avoid rendering details over the login form.
+    try {
+      const token = localStorage.getItem('userToken');
+      // eslint-disable-next-line no-undef
+      if (!token) {
+        return;
+      }
+    } catch (_) {}
 
     const expenses = expensesData;
     const transactions = balancesData.debts;
