@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const morgan = require('morgan');
+const { connectMongo, disconnectMongo } = require('./db/mongo');
 
 const authRoutes = require('./routes/authRoutes');
 const groupRoutes = require('./routes/groupRoutes');
@@ -17,9 +18,22 @@ app.use(morgan('dev'));
 
 app.use(express.static('public'));
 
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('MongoDB connected...'))
-    .catch(err => console.log('MongoDB connection error:', err));
+// Connect to Mongo with retries and logging
+(async () => {
+  try {
+    await connectMongo(MONGO_URI, {
+      serverSelectionTimeoutMS: 50_000,
+      socketTimeoutMS: 45_000,
+      connectTimeoutMS: 20_000,
+      heartbeatFrequencyMS: 10_000,
+      maxPoolSize: 20,
+    });
+    console.log('MongoDB connected...');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  }
+})();
 
 app.use('/api/auth', authRoutes);
 app.use('/api/groups', groupRoutes);
@@ -30,3 +44,14 @@ app.get('/', (req, res) => {
 });
 
 const listener = app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+
+function shutdown(signal) {
+  console.log(`\n${signal} received, shutting down ...`);
+  listener.close(async () => {
+    await disconnectMongo();
+    process.exit(0);
+  });
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
