@@ -7,6 +7,10 @@ import { fetchGroups } from './controllers/groupsController.js';
 import { showGroupExpenses, handleAddExpense, handleDeleteExpense, handleSaveExpense, openAddExpenseModal } from './controllers/expensesController.js';
 import { showConfirm } from './utils/confirm.js';
 
+// Flatpickr instances (declared to avoid ReferenceError in module scope)
+let expenseDatePicker = null;
+let expenseViewDatePicker = null;
+
 let currentUser = null;
 let newGroupParticipants = [];
 

@@ -1,7 +1,7 @@
 // Auth controller: login/logout flow
 import { apiRequest } from '../api.js';
 import { setState } from '../state/store.js';
-import { navigateToGroups } from '../router/router.js';
+import { navigateToGroups, replaceToRoot } from '../router/router.js';
 import { DOM } from '../ui.js';
 
 export async function handleLogin(e) {
@@ -27,4 +27,5 @@ export function handleLogout() {
   localStorage.removeItem('userId');
   setState({ isLoggedIn: false });
   // Let router handle route on next init or explicit navigation if needed
+  try { replaceToRoot(); } catch (_) {}
 }
