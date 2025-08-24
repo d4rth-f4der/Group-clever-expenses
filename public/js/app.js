@@ -1,20 +1,14 @@
 import { apiRequest, findUserByName } from './api.js';
-import { toggleUI, toggleLoading, displayError, renderGroups, renderGroupDetails, DOM, toggleModal, toggleExpenseViewModal, renderPayerSelect, renderParticipants, toggleNewGroupModal, renderGroupParticipants } from './ui.js';
+import { toggleUI, toggleLoading, DOM, toggleModal, toggleExpenseViewModal, toggleNewGroupModal, renderGroupParticipants } from './ui.js';
 import { setState, getState, subscribe } from './state/store.js';
-import { initRouter, navigateToGroup, navigateToGroups, replaceToRoot } from './router/router.js';
+import { initRouter, navigateToGroups, replaceToRoot } from './router/router.js';
 import { handleLogin, handleLogout } from './controllers/authController.js';
 import { fetchGroups } from './controllers/groupsController.js';
-import { showGroupExpenses, getCurrentGroupMembers, handleAddExpense, handleDeleteExpense, handleSaveExpense, openAddExpenseModal } from './controllers/expensesController.js';
+import { showGroupExpenses, handleAddExpense, handleDeleteExpense, handleSaveExpense, openAddExpenseModal } from './controllers/expensesController.js';
 import { showConfirm } from './utils/confirm.js';
 
 let currentUser = null;
-let expenseDatePicker = null; // for Add Expense modal
-let expenseViewDatePicker = null; // for Expense Details modal
 let newGroupParticipants = [];
-
-// moved to controllers
-
-// Router handlers are provided at init time
 
 async function initializeApp() {
     // Get current user info
@@ -27,20 +21,19 @@ async function initializeApp() {
         console.error('Failed to get current user:', error);
     }
 
-    // Reflect store -> UI
     subscribe((s) => {
-        try { toggleUI(!!s.isLoggedIn); } catch (_) {}
-        try { toggleLoading(!!s.loading); } catch (_) {}
+        try { toggleUI(!!s.isLoggedIn); } catch (_) { }
+        try { toggleLoading(!!s.loading); } catch (_) { }
     });
     // Initialize login state from token
     try {
         const token = localStorage.getItem('userToken');
         setState({ isLoggedIn: !!token });
-    } catch (_) {}
+    } catch (_) { }
 
     DOM.loginForm.addEventListener('submit', handleLogin);
     DOM.logoutBtn.addEventListener('click', handleLogout);
-    
+
     // Initialize router with handlers
     await initRouter({
         onGroups: async () => {
@@ -66,10 +59,10 @@ async function initializeApp() {
     // Global unauthorized handler: if any API call returns 401, force login view
     window.addEventListener('api:unauthorized', () => {
         const wasLoggedIn = !!getState().isLoggedIn;
-        try { setState({ loading: false, isLoggedIn: false }); } catch (_) {}
-        try { toggleModal(false); } catch (_) {}
-        try { toggleExpenseViewModal(false); } catch (_) {}
-        try { toggleNewGroupModal(false); } catch (_) {}
+        try { setState({ loading: false, isLoggedIn: false }); } catch (_) { }
+        try { toggleModal(false); } catch (_) { }
+        try { toggleExpenseViewModal(false); } catch (_) { }
+        try { toggleNewGroupModal(false); } catch (_) { }
         if (wasLoggedIn && DOM.loginError) {
             DOM.loginError.textContent = 'Your session has expired. Please log in again.';
         }
@@ -100,8 +93,8 @@ async function initializeApp() {
             (async () => {
                 try {
                     await apiRequest(`groups/${groupId}`, 'DELETE');
-            // Success: go back to groups list and refresh
-            await navigateToGroups();
+                    // Success: go back to groups list and refresh
+                    await navigateToGroups();
                 } catch (error) {
                     // Keep user on the same page; show inline error
                     const msg = String(error.message || 'Failed to delete group');
@@ -158,8 +151,6 @@ async function initializeApp() {
         }
     });
 
-    // Close/cancel handlers for Add Expense and Expense View modals are attached in their respective modules
-
     // New Group Modal Events
     DOM.newGroupBtn.addEventListener('click', async () => {
         // If currentUser is not loaded, try to get it
@@ -175,7 +166,7 @@ async function initializeApp() {
                 return;
             }
         }
-        
+
         if (currentUser) {
             toggleNewGroupModal(true, currentUser);
             // Initialize participants with current user
@@ -185,8 +176,6 @@ async function initializeApp() {
             alert('Please log in first.');
         }
     });
-
-    // Close/cancel handlers for New Group modal are attached in its module
 
     // Add participant in New Group modal
     DOM.addParticipantBtn.addEventListener('click', async () => {
@@ -215,14 +204,12 @@ async function initializeApp() {
         }
     });
 
-    // moved to controllers
     DOM.deleteExpenseBtn.addEventListener('click', handleDeleteExpense);
-    
-    // moved to controllers
+
     if (DOM.saveExpenseBtn) {
         DOM.saveExpenseBtn.addEventListener('click', handleSaveExpense);
     }
-    
+
     // Initialize Flatpickr for optional date/time (Add Expense modal)
     if (window.flatpickr) {
         expenseDatePicker = window.flatpickr('#expense-date', {
@@ -242,8 +229,6 @@ async function initializeApp() {
             });
         }
     }
-
-    // First route was handled by initRouter
 }
 
 document.addEventListener('DOMContentLoaded', initializeApp);
