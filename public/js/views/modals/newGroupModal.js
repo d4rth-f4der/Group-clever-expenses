@@ -12,17 +12,32 @@ export function toggleNewGroupModal(show, currentUser = null) {
         const nameEl = document.getElementById('group-name');
         if (nameEl) nameEl.value = '';
         DOM.addParticipantInput.value = '';
-        renderGroupParticipants([currentUser]);
+        renderGroupParticipants([currentUser], currentUser.username);
     }
 }
 
-export function renderGroupParticipants(participants) {
+export function renderGroupParticipants(participants, activeUsername = null) {
     DOM.groupParticipants.innerHTML = '';
     participants.forEach(participant => {
         const participantTag = document.createElement('div');
         participantTag.className = 'participant-tag';
-        participantTag.style.cssText = 'display: inline-block; background-color: #3b82f6; color: white; padding: 8px 16px; border-radius: 20px; font-size: 1rem; font-weight: 500; margin: 4px 8px 4px 0;';
-        participantTag.textContent = participant.username;
+        participantTag.dataset.username = participant.username;
+
+        // Text node for username
+        const nameNode = document.createElement('span');
+        nameNode.textContent = participant.username;
+        participantTag.appendChild(nameNode);
+
+        // Add removable control for non-active users
+        const isActive = activeUsername && participant.username.toLowerCase() === activeUsername.toLowerCase();
+        if (!isActive) {
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'participant-remove';
+            removeBtn.setAttribute('aria-label', `Remove ${participant.username}`);
+            removeBtn.textContent = '×';
+            participantTag.appendChild(removeBtn);
+        }
         DOM.groupParticipants.appendChild(participantTag);
     });
 }

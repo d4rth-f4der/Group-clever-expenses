@@ -178,7 +178,7 @@ async function initializeApp() {
             toggleNewGroupModal(true, currentUser);
             // Initialize participants with current user
             newGroupParticipants = [currentUser];
-            renderGroupParticipants(newGroupParticipants);
+            renderGroupParticipants(newGroupParticipants, currentUser?.username);
             clearInlineError('new-group-error');
         } else {
             displayError('Please log in first.');
@@ -207,7 +207,7 @@ async function initializeApp() {
             }
 
             newGroupParticipants.push(user);
-            renderGroupParticipants(newGroupParticipants);
+            renderGroupParticipants(newGroupParticipants, currentUser?.username);
             DOM.addParticipantInput.value = '';
             clearInlineError('new-group-error');
         } catch (e) {
@@ -224,6 +224,22 @@ async function initializeApp() {
             // Delegate to the same handler as the Add button
             DOM.addParticipantBtn.click();
         }
+    });
+
+    // Remove participant on click of small × in the tag (except active user)
+    DOM.groupParticipants.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.participant-remove');
+        if (!btn) return;
+        const tag = btn.closest('.participant-tag');
+        const username = tag?.dataset?.username;
+        if (!username) return;
+        if (currentUser && username.toLowerCase() === currentUser.username.toLowerCase()) {
+            // Safety: do not remove active user
+            return;
+        }
+        newGroupParticipants = newGroupParticipants.filter(p => p.username.toLowerCase() !== username.toLowerCase());
+        renderGroupParticipants(newGroupParticipants, currentUser?.username);
+        clearInlineError('new-group-error');
     });
 
     DOM.deleteExpenseBtn.addEventListener('click', handleDeleteExpense);
