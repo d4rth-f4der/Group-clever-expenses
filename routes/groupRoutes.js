@@ -4,12 +4,20 @@ const { protect } = require('../middleware/authMiddleware');
 const Group = require('../models/group');
 const User = require('../models/user');
 const Expense = require('../models/expense');
+const mongoose = require('mongoose');
 
 router.post('/', protect, async (req, res) => {
     const { name, members } = req.body;
 
     if (!name || !members || !Array.isArray(members) || members.length === 0) {
         return res.status(400).json({ message: "Provide group name and at least one member" });
+    }
+
+    // Validate member IDs
+    for (const m of members) {
+        if (!mongoose.Types.ObjectId.isValid(String(m))) {
+            return res.status(400).json({ message: 'Invalid member id provided' });
+        }
     }
 
     const uniqueMembers = new Set(members.map(String));
@@ -48,8 +56,21 @@ router.post('/:groupId/expenses', protect, async (req, res) => {
     const { description, amount, payer, participants, date } = req.body;
     const { groupId } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(String(groupId))) {
+        return res.status(400).json({ message: 'Invalid groupId' });
+    }
+
     if (!description || amount <= 0 || !payer || !participants || !Array.isArray(participants) || participants.length === 0) {
         return res.status(400).json({ message: 'Mandatory: description, amount, payer, participant(s)' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(String(payer))) {
+        return res.status(400).json({ message: 'Invalid payer id' });
+    }
+    for (const p of participants) {
+        if (!mongoose.Types.ObjectId.isValid(String(p))) {
+            return res.status(400).json({ message: 'Invalid participant id' });
+        }
     }
 
     let expenseDate = date ? new Date(date) : undefined;
@@ -105,6 +126,10 @@ router.get('/', protect, async (req, res) => {
 router.get('/:groupId/expenses', protect, async (req, res) => {
     const { groupId } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(String(groupId))) {
+        return res.status(400).json({ message: 'Invalid groupId' });
+    }
+
     try {
         const group = await Group.findById(groupId);
 
@@ -128,6 +153,13 @@ router.get('/:groupId/expenses', protect, async (req, res) => {
 
 router.delete('/:groupId/expenses/:expenseId', protect, async (req, res) => {
 	const { groupId, expenseId } = req.params;
+
+	if (!mongoose.Types.ObjectId.isValid(String(groupId))) {
+		return res.status(400).json({ message: 'Invalid groupId' });
+	}
+	if (!mongoose.Types.ObjectId.isValid(String(expenseId))) {
+		return res.status(400).json({ message: 'Invalid expenseId' });
+	}
 
 	try {
 		const group = await Group.findById(groupId);
@@ -163,6 +195,13 @@ router.patch('/:groupId/expenses/:expenseId', protect, async (req, res) => {
     const { groupId, expenseId } = req.params;
     const { description, amount, payer, participants, date } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(String(groupId))) {
+        return res.status(400).json({ message: 'Invalid groupId' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(String(expenseId))) {
+        return res.status(400).json({ message: 'Invalid expenseId' });
+    }
+
     try {
         const group = await Group.findById(groupId);
         if (!group) return res.status(404).json({ message: 'Group not found' });
@@ -195,6 +234,9 @@ router.patch('/:groupId/expenses/:expenseId', protect, async (req, res) => {
         }
 
         if (typeof payer !== 'undefined') {
+            if (!mongoose.Types.ObjectId.isValid(String(payer))) {
+                return res.status(400).json({ message: 'Invalid payer id' });
+            }
             if (!group.members.map(String).includes(String(payer))) {
                 return res.status(400).json({ message: 'payer must be member of this group' });
             }
@@ -204,6 +246,11 @@ router.patch('/:groupId/expenses/:expenseId', protect, async (req, res) => {
         if (typeof participants !== 'undefined') {
             if (!Array.isArray(participants) || participants.length === 0) {
                 return res.status(400).json({ message: 'participants must be a non-empty array' });
+            }
+            for (const p of participants) {
+                if (!mongoose.Types.ObjectId.isValid(String(p))) {
+                    return res.status(400).json({ message: 'Invalid participant id' });
+                }
             }
             const invalid = participants.filter(pId => !group.members.map(String).includes(String(pId)));
             if (invalid.length > 0) {
@@ -249,6 +296,10 @@ router.patch('/:groupId/expenses/:expenseId', protect, async (req, res) => {
 // Delete entire group by ID (admin only)
 router.delete('/:groupId', protect, async (req, res) => {
     const { groupId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(String(groupId))) {
+        return res.status(400).json({ message: 'Invalid groupId' });
+    }
     try {
         const group = await Group.findById(groupId);
         if (!group) return res.status(404).json({ message: 'Group not found' });
@@ -271,6 +322,10 @@ router.delete('/:groupId', protect, async (req, res) => {
 
 router.get('/:groupId/balances', protect, async (req, res) => {
     const { groupId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(String(groupId))) {
+        return res.status(400).json({ message: 'Invalid groupId' });
+    }
 
     try {
         const group = await Group.findById(groupId).populate('members', 'username email');

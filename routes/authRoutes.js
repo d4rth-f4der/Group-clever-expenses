@@ -19,6 +19,10 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({ message: 'Please enter all required fields' });
     }
 
+    if (typeof password !== 'string' || password.length < 8) {
+        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    }
+
     try {
         const userExists = await User.findOne({ $or: [{ email }, { username }] });
         if (userExists) {
