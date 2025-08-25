@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const morgan = require('morgan');
+const path = require('path');
 const { connectMongo, disconnectMongo } = require('./db/mongo');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -32,6 +33,15 @@ if (CORS_ORIGIN) {
 app.use(morgan('dev'));
 
 app.use(express.static('public'));
+
+// Serve Flatpickr locally from node_modules to avoid external CDNs
+try {
+  const flatpickrDist = path.dirname(require.resolve('flatpickr/dist/flatpickr.min.js'));
+  app.use('/vendor/flatpickr', express.static(flatpickrDist));
+} catch (e) {
+  // If flatpickr is not installed yet, the route won't be mounted; installation step will fix it
+  // console.warn('flatpickr not installed; run npm i flatpickr');
+}
 
 // Required ENV validation
 if (!MONGO_URI) {
