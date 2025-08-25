@@ -118,14 +118,23 @@ export async function handleSaveExpense() {
 
   // Collect edited values
   const desc = document.getElementById('expense-view-description')?.value?.trim();
-  const amountVal = document.getElementById('expense-view-amount')?.value;
+  const amountInputEl = document.getElementById('expense-view-amount');
+  const amountStr = amountInputEl?.value ?? '';
   const payer = document.getElementById('expense-view-payer')?.value;
   const selectedChips = document.querySelectorAll('#expense-view-participants .participant-item.selected');
   const participants = Array.from(selectedChips).map((el) => el.getAttribute('data-id'));
 
   const payload = {};
   if (typeof desc !== 'undefined') payload.description = desc;
-  if (typeof amountVal !== 'undefined' && amountVal !== '') payload.amount = Number(amountVal);
+  // Amount is required for editing; block save if empty
+  if (amountInputEl && amountInputEl.value === '') {
+    showInlineError('expense-delete-error', 'Amount is required');
+    return;
+  }
+  const amountNum = amountInputEl && Number.isFinite(amountInputEl.valueAsNumber)
+    ? amountInputEl.valueAsNumber
+    : Number(amountStr);
+  payload.amount = amountNum;
   if (typeof payer !== 'undefined' && payer) payload.payer = payer;
   if (participants && Array.isArray(participants)) payload.participants = participants;
 
@@ -146,7 +155,7 @@ export async function handleSaveExpense() {
     showInlineError('expense-delete-error', 'Description cannot be empty');
     return;
   }
-  if (typeof payload.amount !== 'undefined' && (!isFinite(payload.amount) || payload.amount <= 0)) {
+  if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
     showInlineError('expense-delete-error', 'Amount must be a positive number');
     return;
   }

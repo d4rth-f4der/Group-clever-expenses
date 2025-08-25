@@ -1,7 +1,10 @@
 import { DOM } from '../../dom/domRefs.js';
+import { clearInlineError } from '../../utils/notify.js';
 
 export function toggleExpenseViewModal(show, expense = null, groupMembers = []) {
     if (show && expense) {
+        // Clear any previous inline errors when opening the modal
+        try { clearInlineError('expense-delete-error'); } catch (_) {}
         const descInput = document.getElementById('expense-view-description');
         if (descInput) descInput.value = expense.description || '';
         const amountInput = document.getElementById('expense-view-amount');
@@ -87,6 +90,8 @@ export function toggleExpenseViewModal(show, expense = null, groupMembers = []) 
         }
         DOM.expenseViewModal.classList.remove('hidden');
     } else {
+        // Clear inline errors when closing the modal as well
+        try { clearInlineError('expense-delete-error'); } catch (_) {}
         DOM.expenseViewModal.classList.add('hidden');
     }
 }
