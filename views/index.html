@@ -16,8 +16,11 @@
     <div class="container">
         <button id="logout-btn" class="hidden">Exit</button>
         <div class="main-header">
+            <button id="history-btn" class="action-button action-button--blue action-button-left hidden">History</button>
             <h1 id="main-title">My Group Expenses</h1>
-            <button id="new-group-btn" class="action-button hidden">New group</button>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button id="new-group-btn" class="action-button hidden">New group</button>
+            </div>
         </div>
 
         <div id="login-container">
@@ -38,6 +41,19 @@
         <div id="error-message" class="hidden"></div>
         <div id="expense-details" class="hidden"></div>
 
+    </div>
+
+    <div id="history-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>History</h2>
+                <button id="close-history-btn" class="close-btn">&times;</button>
+            </div>
+            <div id="history-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            <div class="modal-actions">
+                <button type="button" id="history-close-btn" class="cancel-btn">Close</button>
+            </div>
+        </div>
     </div>
 
     <div id="add-expense-modal" class="modal-overlay hidden">

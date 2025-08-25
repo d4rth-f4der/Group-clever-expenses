@@ -23,6 +23,7 @@ export const DOM = {
     saveExpenseBtn: document.getElementById('save-expense-btn'),
     deleteExpenseBtn: document.getElementById('delete-expense-btn'),
     newGroupBtn: document.getElementById('new-group-btn'),
+    historyBtn: document.getElementById('history-btn'),
 
     // New Group Modal elements
     newGroupModal: document.getElementById('new-group-modal'),
@@ -32,4 +33,10 @@ export const DOM = {
     groupParticipants: document.getElementById('group-participants'),
     addParticipantInput: document.getElementById('add-participant-input'),
     addParticipantBtn: document.getElementById('add-participant-btn'),
+
+    // History Modal elements
+    historyModal: document.getElementById('history-modal'),
+    closeHistoryBtn: document.getElementById('close-history-btn'),
+    historyCloseBtn: document.getElementById('history-close-btn'),
+    historyList: document.getElementById('history-list'),
 };

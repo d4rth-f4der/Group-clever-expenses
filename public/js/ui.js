@@ -5,3 +5,4 @@ export { renderGroupDetails } from './views/groupDetailsView.js';
 export { toggleModal, renderPayerSelect, renderParticipants } from './views/modals/addExpenseModal.js';
 export { toggleExpenseViewModal } from './views/modals/expenseViewModal.js';
 export { toggleNewGroupModal, renderGroupParticipants } from './views/modals/newGroupModal.js';
+export { toggleHistoryModal, openHistoryModal } from './views/modals/historyModal.js';

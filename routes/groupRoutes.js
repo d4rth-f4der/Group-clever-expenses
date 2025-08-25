@@ -5,6 +5,7 @@ const Group = require('../models/group');
 const User = require('../models/user');
 const Expense = require('../models/expense');
 const mongoose = require('mongoose');
+const { logAction, buildExpenseDiff, participantsFromGroup } = require('../utils/actionLogger');
 
 router.post('/', protect, async (req, res) => {
     const { name, members } = req.body;
@@ -35,6 +36,25 @@ router.post('/', protect, async (req, res) => {
             members: validMemberIds,
             admin: req.user._id
         });
+
+        // Log group creation
+        try {
+            await logAction({
+                action: 'group:create',
+                entityType: 'group',
+                entityId: group._id,
+                groupId: group._id,
+                actorUserId: req.user._id,
+                participants: participantsFromGroup(group),
+                title: `Group '${name}' created`,
+                details: {
+                    name: group.name,
+                    members: participantsFromGroup(group),
+                    adminId: String(group.admin)
+                },
+                req
+            });
+        } catch (e) { /* swallow */ }
 
         res.status(201).json({
             _id: group._id,
@@ -97,6 +117,27 @@ router.post('/:groupId/expenses', protect, async (req, res) => {
             date: expenseDate
         });
 
+        // Log expense creation
+        try {
+            await logAction({
+                action: 'expense:create',
+                entityType: 'expense',
+                entityId: expense._id,
+                groupId: group._id,
+                actorUserId: req.user._id,
+                participants: participantsFromGroup(group),
+                title: `Expense created: ${description}`,
+                details: {
+                    amount,
+                    description,
+                    payerId: String(payer),
+                    participants: participants.map(String),
+                    date: expense.date
+                },
+                req
+            });
+        } catch (e) { /* swallow */ }
+
         return res.status(201).json({
             _id: expense._id,
             description: expense.description,
@@ -152,42 +193,67 @@ router.get('/:groupId/expenses', protect, async (req, res) => {
 });
 
 router.delete('/:groupId/expenses/:expenseId', protect, async (req, res) => {
-	const { groupId, expenseId } = req.params;
+    const { groupId, expenseId } = req.params;
 
-	if (!mongoose.Types.ObjectId.isValid(String(groupId))) {
-		return res.status(400).json({ message: 'Invalid groupId' });
-	}
-	if (!mongoose.Types.ObjectId.isValid(String(expenseId))) {
-		return res.status(400).json({ message: 'Invalid expenseId' });
-	}
+    if (!mongoose.Types.ObjectId.isValid(String(groupId))) {
+        return res.status(400).json({ message: 'Invalid groupId' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(String(expenseId))) {
+        return res.status(400).json({ message: 'Invalid expenseId' });
+    }
 
-	try {
-		const group = await Group.findById(groupId);
-		if (!group) return res.status(404).json({ message: 'Group not found' });
+    try {
+        const group = await Group.findById(groupId);
+        if (!group) return res.status(404).json({ message: 'Group not found' });
 
-		const isMember = group.members.map(String).includes(String(req.user._id));
-		if (!isMember) {
-			return res.status(403).json({ message: 'Not authorised to delete expenses in this group' });
-		}
+        const isMember = group.members.map(String).includes(String(req.user._id));
+        if (!isMember) {
+            return res.status(403).json({ message: 'Not authorised to delete expenses in this group' });
+        }
 
-		const expense = await Expense.findOne({ _id: expenseId, group: groupId });
-		if (!expense) {
-			return res.status(404).json({ message: 'Expense not found' });
-		}
+        const expense = await Expense.findOne({ _id: expenseId, group: groupId });
+        if (!expense) {
+            return res.status(404).json({ message: 'Expense not found' });
+        }
 
-		const isAdmin = String(group.admin) === String(req.user._id);
-		const isPayer = String(expense.payer) === String(req.user._id);
+        const isAdmin = String(group.admin) === String(req.user._id);
+        const isPayer = String(expense.payer) === String(req.user._id);
 
-		if (!isAdmin && !isPayer) {
-			return res.status(403).json({ message: 'Only group admin or payer can delete this expense' });
-		}
+        if (!isAdmin && !isPayer) {
+            return res.status(403).json({ message: 'Only group admin or payer can delete this expense' });
+        }
 
-		await expense.deleteOne();
-		return res.status(200).json({ message: 'Expense deleted successfully' });
-	} catch (err) {
-		console.error('Delete expense error:', err);
-		return res.status(500).json({ message: 'Server error on attempt to delete expense' });
-	}
+        // Prepare details before delete
+        const details = {
+            amount: expense.amount,
+            description: expense.description,
+            payerId: String(expense.payer),
+            participants: (expense.participants || []).map(p => String(p.user || p)),
+            date: expense.date
+        };
+
+        await expense.deleteOne();
+
+        // Log expense delete
+        try {
+            await logAction({
+                action: 'expense:delete',
+                entityType: 'expense',
+                entityId: expenseId,
+                groupId: group._id,
+                actorUserId: req.user._id,
+                participants: participantsFromGroup(group),
+                title: `Expense deleted: ${details.description}`,
+                details,
+                req
+            });
+        } catch (e) { /* swallow */ }
+
+        return res.status(200).json({ message: 'Expense deleted successfully' });
+    } catch (err) {
+        console.error('Delete expense error:', err);
+        return res.status(500).json({ message: 'Server error on attempt to delete expense' });
+    }
 });
 
 // Update existing expense
@@ -217,6 +283,9 @@ router.patch('/:groupId/expenses/:expenseId', protect, async (req, res) => {
         }
 
         // Any group member can update expense details (no admin/payer restriction)
+
+        // snapshot before
+        const before = expense.toObject();
 
         if (typeof description !== 'undefined') {
             if (!description || !String(description).trim()) {
@@ -277,6 +346,24 @@ router.patch('/:groupId/expenses/:expenseId', protect, async (req, res) => {
             .populate('payer', 'username email')
             .populate('participants.user', 'username email');
 
+        // Log expense update
+        try {
+            const diff = buildExpenseDiff(before, expense);
+            if ((diff.changedFields || []).length > 0) {
+                await logAction({
+                    action: 'expense:update',
+                    entityType: 'expense',
+                    entityId: expense._id,
+                    groupId: group._id,
+                    actorUserId: req.user._id,
+                    participants: participantsFromGroup(group),
+                    title: `Expense updated: ${expense.description}`,
+                    details: diff,
+                    req
+                });
+            }
+        } catch (e) { /* swallow */ }
+
         return res.status(200).json({
             _id: populated._id,
             description: populated.description,
@@ -311,7 +398,29 @@ router.delete('/:groupId', protect, async (req, res) => {
 
         // Remove all expenses linked to this group
         await Expense.deleteMany({ group: groupId });
+
+        const groupDetails = {
+            name: group.name,
+            members: participantsFromGroup(group),
+            adminId: String(group.admin)
+        };
+
         await group.deleteOne();
+
+        // Log group delete
+        try {
+            await logAction({
+                action: 'group:delete',
+                entityType: 'group',
+                entityId: groupId,
+                groupId: groupId,
+                actorUserId: req.user._id,
+                participants: groupDetails.members,
+                title: `Group deleted: '${groupDetails.name}'`,
+                details: groupDetails,
+                req
+            });
+        } catch (e) { /* swallow */ }
 
         return res.status(200).json({ message: 'Group deleted successfully' });
     } catch (err) {

@@ -1,5 +1,6 @@
 import { apiRequest, findUserByName } from './api.js';
-import { toggleUI, toggleLoading, DOM, toggleModal, toggleExpenseViewModal, toggleNewGroupModal, renderGroupParticipants, displayError } from './ui.js';
+import { toggleUI, toggleLoading, DOM, toggleModal, toggleExpenseViewModal, toggleNewGroupModal, renderGroupParticipants, displayError, openHistoryModal } from './ui.js';
+
 import { setState, getState, subscribe } from './state/store.js';
 import { initRouter, navigateToGroups, replaceToRoot } from './router/router.js';
 import { handleLogin, handleLogout } from './controllers/authController.js';
@@ -34,6 +35,11 @@ async function initializeApp() {
                 currentUser = null;
                 newGroupParticipants = [];
             }
+            if (DOM.historyBtn) {
+                const onGroups = (window.location.pathname || '/') === '/';
+                if (s.isLoggedIn && onGroups) DOM.historyBtn.classList.remove('hidden');
+                else DOM.historyBtn.classList.add('hidden');
+            }
         } catch (_) { }
     });
     // Initialize login state from token
@@ -45,6 +51,12 @@ async function initializeApp() {
     DOM.loginForm.addEventListener('submit', handleLogin);
     DOM.logoutBtn.addEventListener('click', handleLogout);
 
+    if (DOM.historyBtn) {
+        DOM.historyBtn.addEventListener('click', () => {
+            openHistoryModal();
+        });
+    }
+
     // Initialize router with handlers
     await initRouter({
         onGroups: async () => {
@@ -55,6 +67,9 @@ async function initializeApp() {
             }
             setState({ isLoggedIn: true });
             await fetchGroups();
+            try {
+                if (DOM.historyBtn) DOM.historyBtn.classList.remove('hidden');
+            } catch (_) { }
         },
         onGroup: async (groupId, groupName) => {
             const token = localStorage.getItem('userToken');
@@ -64,6 +79,9 @@ async function initializeApp() {
             }
             setState({ isLoggedIn: true });
             await showGroupExpenses(groupId, groupName);
+            try {
+                if (DOM.historyBtn) DOM.historyBtn.classList.add('hidden');
+            } catch (_) { }
         }
     });
 

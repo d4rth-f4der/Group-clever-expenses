@@ -188,9 +188,16 @@ h1 {
     padding: 0 120px;
 }
 
-.main-header .action-button {
+.main-header #new-group-btn {
     position: absolute;
     right: 0;
+    top: 0;
+    margin-top: 24px;
+}
+
+.main-header #history-btn {
+    position: absolute;
+    left: 0;
     top: 0;
     margin-top: 24px;
 }
@@ -222,10 +229,32 @@ h1 {
     font-size: 1rem;
     font-weight: 600;
     transition: background-color 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    white-space: nowrap;
 }
 
 .action-button:hover {
     background-color: #40ac88;
+}
+
+/* Blue variant for History button */
+.action-button--blue {
+    background-color: #3b82f6;
+}
+.action-button--blue:hover {
+    background-color: #2563eb;
+}
+
+/* Place History button to the left of the title */
+.action-button-left {
+    position: absolute;
+    left: 0;
+    right: auto;
+    top: 0;
+    margin-top: 24px;
 }
 
 #expense-details {
