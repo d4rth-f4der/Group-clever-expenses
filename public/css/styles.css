@@ -399,6 +399,17 @@ h1 {
     margin-bottom: 24px;
 }
 
+.header-buttons .expense-action-button {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; /* keep square shape */
+    font-size: 1.5rem; /* larger arrow/plus */
+    line-height: 1;
+}
+
 .footer-actions {
     display: flex;
     justify-content: flex-end;
@@ -413,10 +424,10 @@ h1 {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 600;
     transition: background-color 0.2s ease-in-out;
-    margin-bottom: 24px;
+    margin-bottom: 0; /* align with + button */
 }
 
 #back-to-groups-btn:hover {
@@ -430,8 +441,8 @@ h1 {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    font-weight: 200;
     transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 

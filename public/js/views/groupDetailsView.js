@@ -39,13 +39,13 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
 
     DOM.expenseDetailsContainer.innerHTML = `
         <div class="header-buttons">
-            <button id="back-to-groups-btn" class="expense-action-button">← Back to groups</button>
-            <button id="add-expense-btn" class="expense-action-button">Add Expense</button>
+            <button id="back-to-groups-btn" class="expense-action-button" title="Back to groups">←</button>
+            <button id="add-expense-btn" class="expense-action-button" title="Add expense">+</button>
         </div>
-        <h3>Expenses list</h3>
-        <ul>${expensesHtml || '<li>No expenses yet.</li>'}</ul>
         <h3>Who owes who</h3>
         <ul>${transactionsHtml || '<li>All even.</li>'}</ul>
+        <h3>Expenses list</h3>
+        <ul>${expensesHtml || '<li>No expenses yet.</li>'}</ul>
         <div id="group-delete-error" class="inline-error hidden" role="alert"></div>
         <div class="footer-actions">
             <button id="delete-group-btn" class="delete-btn" title="Delete this group">Delete Group</button>
