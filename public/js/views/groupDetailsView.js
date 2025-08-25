@@ -42,7 +42,7 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
 
     const transactionsHtml = transactions.map(t => `
         <li class="transaction-item">
-            ${t.from.username} owes ${t.to.username} ${t.amount.toFixed(2)} hrn.
+            <span class="username participant-username">${t.from.username}</span> owes <span class="username participant-username">${t.to.username}</span> ${t.amount.toFixed(2)} hrn.
         </li>
     `).join('');
 
