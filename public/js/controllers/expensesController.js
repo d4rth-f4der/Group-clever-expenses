@@ -219,18 +219,19 @@ export async function showGroupExpenses(groupId, groupName) {
     const expenses = expensesData;
     const transactions = balancesData.debts;
     const groupMembers = balancesData.group.members;
+    const adminId = balancesData.group.admin;
 
     currentGroupMembers = groupMembers;
 
     // keep existing behavior: update history state
     history.replaceState(
-      { screen: 'expenses', groupId, groupName, groupMembers },
+      { screen: 'expenses', groupId, groupName, groupMembers, adminId },
       '',
       `/groups/${groupId}`
     );
 
     setState({ loading: false });
-    renderGroupDetails(groupName, expenses, transactions, groupMembers);
+    renderGroupDetails(groupName, expenses, transactions, groupMembers, adminId);
   } catch (error) {
     // Defer UI error handling to caller or basic console
     console.error(error);

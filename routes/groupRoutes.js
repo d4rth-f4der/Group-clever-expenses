@@ -408,6 +408,7 @@ router.get('/:groupId/balances', protect, async (req, res) => {
                 _id: group._id,
                 name: group.name,
                 members: group.members,
+                admin: group.admin,
             },
             summary: finalBalances,
             debts: debts

@@ -349,6 +349,7 @@ h1 {
     gap: 8px;
     align-items: center;
     flex-wrap: wrap;
+    padding-bottom: 6px; /* space for tiny admin caption positioned below chips */
 }
 
 .label {
@@ -377,6 +378,35 @@ h1 {
     border-radius: 6px;
     font-size: 0.875rem; /* 14px */
     line-height: 1.4;
+}
+
+/* Admin chip variant */
+.participant-username.admin-username {
+    background-color: #fde68a; /* amber-200 */
+    color: #7a4b00; /* dark amber text */
+}
+
+/* Wrapper keeps chip baseline aligned; caption is absolutely positioned below */
+.participant-wrapper {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Tiny admin label under the chip (does not affect line height) */
+.admin-caption {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.55rem; /* a bit smaller than before */
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #998867; /* subtle gray */
+    opacity: 0.9;
+    white-space: nowrap;
+    pointer-events: none;
 }
 
 .expense-date {

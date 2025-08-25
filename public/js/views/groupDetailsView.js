@@ -1,7 +1,7 @@
 import { DOM } from '../dom/domRefs.js';
 import { toggleExpenseViewModal } from './modals/expenseViewModal.js';
 
-export function renderGroupDetails(groupName, expenses, transactions, groupMembers = []) {
+export function renderGroupDetails(groupName, expenses, transactions, groupMembers = [], adminId) {
     DOM.mainTitle.textContent = `"${groupName}" Group Expenses`;
     DOM.groupsContainer.classList.add('hidden');
     DOM.expenseDetailsContainer.classList.remove('hidden');
@@ -40,6 +40,18 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
     DOM.expenseDetailsContainer.innerHTML = `
         <div class="header-buttons">
             <button id="back-to-groups-btn" class="expense-action-button" title="Back to groups">←</button>
+            <div class="expense-participants" aria-label="Group participants">
+                <span class="label">participants</span> 
+                ${(Array.isArray(groupMembers) ? groupMembers : []).map(m => {
+                    const isAdmin = String(m._id) === String(adminId);
+                    return `
+                        <span class="participant-wrapper">
+                            <span class="username participant-username${isAdmin ? ' admin-username' : ''}">${m.username}</span>
+                            ${isAdmin ? '<span class="admin-caption" aria-label="admin">admin</span>' : ''}
+                        </span>
+                    `;
+                }).join('')}
+            </div>
             <button id="add-expense-btn" class="expense-action-button" title="Add expense">+</button>
         </div>
         <h3>Who owes who</h3>
