@@ -323,7 +323,7 @@ h1 {
 
 .expense-description {
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.125rem; /* slightly larger */
     color: #1f2937;
 }
 
@@ -386,6 +386,19 @@ h1 {
     color: #7a4b00; /* dark amber text */
 }
 
+/* Payer chip variant (green) used inside each expense in shared list) */
+.participant-username.payer-username {
+    background-color: #cfeeda;
+    color: #0c6e28;
+}
+
+/* Standalone payer chip (when payer is not in shared) */
+.participant-username.payer-username-standalone {
+    /* same size as participant-username; only color adjusted */
+    background-color: #cbe6f8; /* sky-100 */
+    color: #0c4a6e; /* sky-900 */
+}
+
 /* Wrapper keeps chip baseline aligned; caption is absolutely positioned below */
 .participant-wrapper {
     position: relative;
@@ -404,6 +417,22 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 0.02em;
     color: #998867; /* subtle gray */
+    opacity: 0.9;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Tiny caption for payer below chip (does not affect line height) */
+.paid-caption {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.55rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #3a7453;
     opacity: 0.9;
     white-space: nowrap;
     pointer-events: none;

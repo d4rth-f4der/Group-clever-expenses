@@ -11,6 +11,7 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
         const date = new Date(expense.date);
         const formattedDate = date.toLocaleDateString('uk-UA', { year: 'numeric', month: '2-digit', day: '2-digit' });
         const formattedTime = date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        const payerInShared = Array.isArray(expense.participants) && expense.participants.some(p => String(p.user._id) === String(expense.payer._id));
         return `
             <li class="expense-item" data-expense-index="${index}" style="cursor: pointer;">
                 <div class="expense-main">
@@ -23,9 +24,17 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
                 <div class="expense-details">
                     <span class="expense-participants">
                         <span class="label">shared</span> 
-                        ${expense.participants.map(p => `<span class="username participant-username">${p.user.username}</span>`).join('')}
+                        ${expense.participants.map(p => {
+                            const isPayer = String(p.user._id) === String(expense.payer._id);
+                            return `
+                                <span class="participant-wrapper">
+                                    <span class="username participant-username${isPayer ? ' payer-username' : ''}">${p.user.username}</span>
+                                    ${isPayer ? '<span class="paid-caption" aria-label="paid by">paid</span>' : ''}
+                                </span>
+                            `;
+                        }).join('')}
                     </span>
-                    <span class="expense-payer"><span class="label">paid</span> <span class="username payer-username">${expense.payer.username}</span></span>
+                    ${payerInShared ? '' : `<span class="expense-payer"><span class="label">paid by</span> <span class="username participant-username payer-username-standalone">${expense.payer.username}</span></span>`}
                 </div>
             </li>
         `;
