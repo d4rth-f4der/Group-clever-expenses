@@ -22,6 +22,16 @@ export function renderPayerSelect(members) {
         option.textContent = member.username;
         payerSelect.appendChild(option);
     });
+    // Preselect active user if available
+    try {
+        const userId = localStorage.getItem('userId');
+        if (userId && members.some(m => String(m._id) === String(userId))) {
+            payerSelect.value = userId;
+        } else if (members.length > 0) {
+            // Fallback: select first member to avoid empty selection
+            payerSelect.value = members[0]._id;
+        }
+    } catch (_) {}
 }
 
 export function renderParticipants(members) {
