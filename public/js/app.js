@@ -29,6 +29,12 @@ async function initializeApp() {
     subscribe((s) => {
         try { toggleUI(!!s.isLoggedIn); } catch (_) { }
         try { toggleLoading(!!s.loading); } catch (_) { }
+        try {
+            if (!s.isLoggedIn) {
+                currentUser = null;
+                newGroupParticipants = [];
+            }
+        } catch (_) { }
     });
     // Initialize login state from token
     try {
