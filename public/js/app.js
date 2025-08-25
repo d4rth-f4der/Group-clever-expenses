@@ -216,6 +216,16 @@ async function initializeApp() {
         }
     });
 
+    // Make Enter in the add-participant input behave like clicking Add (and not submit the form)
+    DOM.addParticipantInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            // Delegate to the same handler as the Add button
+            DOM.addParticipantBtn.click();
+        }
+    });
+
     DOM.deleteExpenseBtn.addEventListener('click', handleDeleteExpense);
 
     if (DOM.saveExpenseBtn) {
