@@ -14,6 +14,11 @@ export function renderExpenseDelete(log) {
   groupDiv.classList.add('history-text');
   groupDiv.textContent = `Group: ${groupName || 'N/A'}`;
 
+  const dateDiv = document.createElement('div');
+  dateDiv.classList.add('history-text');
+  const d = details && details.date ? new Date(details.date) : null;
+  dateDiv.textContent = `Date: ${d && !isNaN(+d) ? d.toLocaleString() : 'N/A'}`;
+
   const payer = document.createElement('div');
   payer.classList.add('history-text');
   payer.textContent = `Payer: ${payerName || 'N/A'}`;
@@ -39,6 +44,7 @@ export function renderExpenseDelete(log) {
 
   wrap.appendChild(meta);
   wrap.appendChild(groupDiv);
+  wrap.appendChild(dateDiv);
   wrap.appendChild(payer);
   wrap.appendChild(amountDiv);
   wrap.appendChild(partsLabel);
