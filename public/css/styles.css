@@ -580,6 +580,19 @@ h1 {
     padding-right: 4px; /* small room for scrollbar */
 }
 
+/* History Details modal sizing and scroll */
+#history-details-modal .modal-content {
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+}
+
+#history-details-modal #history-details-content {
+    overflow: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-right: 4px;
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;

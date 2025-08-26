@@ -39,4 +39,9 @@ export const DOM = {
     closeHistoryBtn: document.getElementById('close-history-btn'),
     historyCloseBtn: document.getElementById('history-close-btn'),
     historyList: document.getElementById('history-list'),
+
+    // History Details Modal elements
+    historyDetailsModal: document.getElementById('history-details-modal'),
+    closeHistoryDetailsBtn: document.getElementById('close-history-details-btn'),
+    historyDetailsContent: document.getElementById('history-details-content'),
 };

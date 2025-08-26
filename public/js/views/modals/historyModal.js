@@ -1,5 +1,6 @@
 import { DOM } from '../../dom/domRefs.js';
 import { apiRequest } from '../../api.js';
+import { openHistoryItemDetails } from './historyDetailsModal.js';
 
 export function toggleHistoryModal(show) {
   if (!DOM.historyModal) return;
@@ -20,6 +21,8 @@ function renderRow(log) {
   row.style.border = '1px solid #E5E7EB';
   row.style.borderRadius = '8px';
   row.style.background = '#fff';
+  row.style.cursor = 'pointer';
+  row.addEventListener('click', () => openHistoryItemDetails(log));
 
   const left = document.createElement('div');
   const who = document.createElement('div');

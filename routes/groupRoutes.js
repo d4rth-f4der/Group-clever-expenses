@@ -396,13 +396,15 @@ router.delete('/:groupId', protect, async (req, res) => {
             return res.status(403).json({ message: 'Only group admin can delete this group' });
         }
 
-        // Remove all expenses linked to this group
+        // Count and then remove all expenses linked to this group
+        const expensesCount = await Expense.countDocuments({ group: groupId });
         await Expense.deleteMany({ group: groupId });
 
         const groupDetails = {
             name: group.name,
             members: participantsFromGroup(group),
-            adminId: String(group.admin)
+            adminId: String(group.admin),
+            expensesCount
         };
 
         await group.deleteOne();
