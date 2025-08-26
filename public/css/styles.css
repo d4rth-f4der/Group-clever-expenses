@@ -567,6 +567,19 @@ h1 {
     flex-direction: column;
 }
 
+/* History modal should not overflow the viewport and must be scrollable */
+#history-modal .modal-content {
+    max-height: calc(100vh - 48px);
+    overflow: hidden; /* contain inner scrolling area */
+}
+
+#history-modal #history-list {
+    overflow: auto;
+    flex: 1 1 auto;
+    min-height: 0; /* allow flex child to shrink for proper scrolling */
+    padding-right: 4px; /* small room for scrollbar */
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;
