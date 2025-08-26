@@ -905,8 +905,8 @@ h1 {
 .history-text { color: #374151; }
 .history-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .history-chip {
-    background: #e5f0ff;
-    color: #1e3a8a;
+    background: #a7ae9d;
+    color: #f9f5f2;
     padding: 4px 8px;
     border-radius: 9999px;
     font-size: 12px;
@@ -925,3 +925,60 @@ h1 {
 .history-field { font-weight: 600; }
 .history-text-sm { font-size: 12px; color: #374151; }
 .history-list { display: grid; gap: 6px; }
+
+/* ============================= */
+/* History modal list row styles */
+/* ============================= */
+.history-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.history-row-who {
+    font-weight: 500;
+    color: #434646;
+}
+
+.history-row-what {
+    color: #111827;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* Lighter weight for action prefix and subline */
+.history-action { font-weight: 300; }
+.history-sub { font-weight: 300; }
+
+.history-row-right {
+    color: #6B7280;
+    font-size: 12px;
+}
+
+/* Actor line spans both columns on second row */
+.history-row-actor {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+}
+
+.history-row-members {
+    grid-column: 1 / -1;
+}
+
+/* Action color variants */
+.history-row--group-create { background-color: #e3f3ff; }
+.history-row--group-delete { background-color: #e4dade; }
+.history-row--expense-create { background-color: #e6ffee; }
+.history-row--expense-update { background-color: #fffde2; }
+.history-row--expense-delete { background-color: #fee6e2; }
+
+/* Loading and empty states for history list */
+.history-loading,
+.history-empty {
+    color: #6B7280;
+}
