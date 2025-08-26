@@ -10,10 +10,14 @@ export function renderExpenseCreate(log) {
   const ts = new Date(timestamp);
   meta.textContent = `${actorName || 'Unknown'} • ${isNaN(+ts) ? '' : ts.toLocaleString()}`;
 
-  const pay = document.createElement('div');
-  pay.classList.add('history-text');
+  const payer = document.createElement('div');
+  payer.classList.add('history-text');
+  payer.textContent = `Payer: ${payerName || 'N/A'}`;
+
+  const amountDiv = document.createElement('div');
+  amountDiv.classList.add('history-text');
   const amt = typeof amount === 'number' ? amount.toFixed(2) : amount;
-  pay.textContent = `Payer: ${payerName || 'N/A'}, Amount: ${amt ?? 'N/A'} ${currency}`;
+  amountDiv.textContent = `Amount: ${amt ?? 'N/A'} ${currency}`;
 
   const partsLabel = document.createElement('div');
   partsLabel.classList.add('history-label');
@@ -30,7 +34,8 @@ export function renderExpenseCreate(log) {
   });
 
   wrap.appendChild(meta);
-  wrap.appendChild(pay);
+  wrap.appendChild(payer);
+  wrap.appendChild(amountDiv);
   wrap.appendChild(partsLabel);
   wrap.appendChild(parts);
   return wrap;
