@@ -1,7 +1,8 @@
 import { apiRequest } from '../../api.js';
 
-// Cache of userId -> username built from /groups
+// Cache of userId -> username and groupId -> groupName built from /groups
 let userNameById = new Map();
+let groupNameById = new Map();
 let loaded = false;
 let loadingPromise = null;
 
@@ -12,7 +13,11 @@ async function loadUsersFromGroups() {
     try {
       const groups = await apiRequest('groups');
       const map = new Map();
+      const gmap = new Map();
       (Array.isArray(groups) ? groups : []).forEach(g => {
+        if (g && g._id) {
+          gmap.set(String(g._id), g.name || String(g._id));
+        }
         (g.members || []).forEach(m => {
           const id = String(m._id || m);
           const name = (m.username || m.email || id);
@@ -25,6 +30,7 @@ async function loadUsersFromGroups() {
         }
       });
       userNameById = map;
+      groupNameById = gmap;
       loaded = true;
     } catch (_) {
       // keep empty map on failure; renderers will fallback to IDs
@@ -37,6 +43,11 @@ async function loadUsersFromGroups() {
 function nameOf(id) {
   const key = String(id || '');
   return (userNameById.get(key) || key);
+}
+
+function groupNameOf(id) {
+  const key = String(id || '');
+  return (groupNameById.get(key) || key);
 }
 
 function toNameArray(ids) {
@@ -65,7 +76,22 @@ export async function enrichLogDetails(log) {
     payerName: details.payerName, // may be undefined; we'll fill from payerId
     participants: details.participants, // may be IDs or objects
     date: details.date,
+    groupName: groupNameOf(log?.groupId),
   };
+
+  // If groupName still looks like an ID, fetch it directly (avoid cached 304 for /groups)
+  if (log?.groupId && base.groupName === String(log.groupId)) {
+    try {
+      const fresh = await apiRequest(`groups/${log.groupId}/balances?ts=${Date.now()}`);
+      const name = fresh?.group?.name;
+      if (name) {
+        groupNameById.set(String(log.groupId), name);
+        base.groupName = name;
+      }
+    } catch (_) {
+      // ignore; keep ID fallback
+    }
+  }
 
   // Fill payerName if only payerId provided
   if (!base.payerName && details.payerId) {

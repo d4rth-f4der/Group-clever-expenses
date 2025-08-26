@@ -1,6 +1,6 @@
 export function renderExpenseUpdate(log) {
   const { actorName, timestamp, details = {} } = log || {};
-  const { description, changes = [] } = details;
+  const { description, changes = [], groupName } = details;
 
   const wrap = document.createElement('div');
   wrap.classList.add('history-wrap-8');
@@ -9,6 +9,10 @@ export function renderExpenseUpdate(log) {
   meta.classList.add('history-meta');
   const ts = new Date(timestamp);
   meta.textContent = `${actorName || 'Unknown'} • ${isNaN(+ts) ? '' : ts.toLocaleString()}`;
+
+  const groupDiv = document.createElement('div');
+  groupDiv.classList.add('history-text');
+  groupDiv.textContent = `Group: ${groupName || 'N/A'}`;
 
   const list = document.createElement('div');
   list.classList.add('history-list');
@@ -40,6 +44,7 @@ export function renderExpenseUpdate(log) {
   }
 
   wrap.appendChild(meta);
+  wrap.appendChild(groupDiv);
   wrap.appendChild(list);
   return wrap;
 }

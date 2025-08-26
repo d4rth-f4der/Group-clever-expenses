@@ -1,6 +1,6 @@
 export function renderExpenseDelete(log) {
   const { actorName, timestamp, details = {} } = log || {};
-  const { description, amount, currency = 'UAH', payerName, participants = [] } = details;
+  const { description, amount, currency = 'UAH', payerName, participants = [], groupName } = details;
 
   const wrap = document.createElement('div');
   wrap.classList.add('history-wrap-8');
@@ -9,6 +9,10 @@ export function renderExpenseDelete(log) {
   meta.classList.add('history-meta');
   const ts = new Date(timestamp);
   meta.textContent = `${actorName || 'Unknown'} • ${isNaN(+ts) ? '' : ts.toLocaleString()}`;
+
+  const groupDiv = document.createElement('div');
+  groupDiv.classList.add('history-text');
+  groupDiv.textContent = `Group: ${groupName || 'N/A'}`;
 
   const payer = document.createElement('div');
   payer.classList.add('history-text');
@@ -34,6 +38,7 @@ export function renderExpenseDelete(log) {
   });
 
   wrap.appendChild(meta);
+  wrap.appendChild(groupDiv);
   wrap.appendChild(payer);
   wrap.appendChild(amountDiv);
   wrap.appendChild(partsLabel);
