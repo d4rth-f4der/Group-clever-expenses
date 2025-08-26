@@ -11,7 +11,7 @@ async function loadUsersFromGroups() {
   if (loadingPromise) return loadingPromise;
   loadingPromise = (async () => {
     try {
-      const groups = await apiRequest('groups');
+      const groups = await apiRequest(`groups?ts=${Date.now()}`);
       const map = new Map();
       const gmap = new Map();
       (Array.isArray(groups) ? groups : []).forEach(g => {
@@ -76,22 +76,15 @@ export async function enrichLogDetails(log) {
     payerName: details.payerName, // may be undefined; we'll fill from payerId
     participants: details.participants, // may be IDs or objects
     date: details.date,
-    groupName: groupNameOf(log?.groupId),
+    groupName: (typeof details.groupName === 'string' && details.groupName.trim())
+      ? details.groupName
+      : (typeof details.name === 'string' && details.name.trim())
+        ? details.name
+        : groupNameOf(log?.groupId),
   };
 
-  // If groupName still looks like an ID, fetch it directly (avoid cached 304 for /groups)
-  if (log?.groupId && base.groupName === String(log.groupId)) {
-    try {
-      const fresh = await apiRequest(`groups/${log.groupId}/balances?ts=${Date.now()}`);
-      const name = fresh?.group?.name;
-      if (name) {
-        groupNameById.set(String(log.groupId), name);
-        base.groupName = name;
-      }
-    } catch (_) {
-      // ignore; keep ID fallback
-    }
-  }
+  // Do NOT call balances here; logs must be self-sufficient even if group was deleted later
+  // If name remains an ID after using cached groups and details.groupName/name, we leave it as-is.
 
   // Fill payerName if only payerId provided
   if (!base.payerName && details.payerId) {
@@ -133,7 +126,11 @@ export async function enrichLogDetails(log) {
         from = formatDate(from);
         to = formatDate(to);
       }
-      changes.push({ field: label, from, to });
+      // Skip no-op changes where normalized values are equal
+      const same = JSON.stringify(from) === JSON.stringify(to);
+      if (!same) {
+        changes.push({ field: label, from, to });
+      }
     }
     base.changes = changes;
     // prefer description from details.after if present
@@ -142,6 +139,24 @@ export async function enrichLogDetails(log) {
       : (details.before && details.before.description) != null
         ? details.before.description
         : (base.description || log?.title?.replace(/^Expense updated:\s*/i, '') || undefined);
+
+    // Backfill display fields for summary (use after -> before)
+    const after = details.after || {};
+    const before = details.before || {};
+
+    if (base.amount === undefined) base.amount = (after.amount !== undefined) ? after.amount : before.amount;
+    if (!base.currency) base.currency = (after.currency !== undefined) ? after.currency : (before.currency !== undefined ? before.currency : base.currency);
+    if (!base.date) base.date = (after.date !== undefined) ? after.date : before.date;
+    if (!base.payerName) {
+      const pid = (after.payerId !== undefined) ? after.payerId : before.payerId;
+      if (pid) base.payerName = nameOf(pid);
+    }
+    if (!Array.isArray(base.participants) || base.participants.length === 0) {
+      const parts = (after.participants !== undefined) ? after.participants : before.participants;
+      if (Array.isArray(parts)) {
+        base.participants = toNameArray(parts);
+      }
+    }
   }
 
   // For group delete we also pass expensesCount through

@@ -25,7 +25,9 @@ export async function apiRequest(endpoint, method = 'GET', body = null) {
     const options = {
         method,
         headers,
-        body: body ? JSON.stringify(body) : null
+        body: body ? JSON.stringify(body) : null,
+        // Avoid 304 and stale cached payloads for sensitive data like groups/history
+        cache: method === 'GET' ? 'no-store' : undefined,
     };
 
     try {

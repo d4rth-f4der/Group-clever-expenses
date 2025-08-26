@@ -132,7 +132,8 @@ router.post('/:groupId/expenses', protect, async (req, res) => {
                     description,
                     payerId: String(payer),
                     participants: participants.map(String),
-                    date: expense.date
+                    date: expense.date,
+                    groupName: group.name,
                 },
                 req
             });
@@ -229,7 +230,8 @@ router.delete('/:groupId/expenses/:expenseId', protect, async (req, res) => {
             description: expense.description,
             payerId: String(expense.payer),
             participants: (expense.participants || []).map(p => String(p.user || p)),
-            date: expense.date
+            date: expense.date,
+            groupName: group.name,
         };
 
         await expense.deleteOne();
@@ -358,7 +360,16 @@ router.patch('/:groupId/expenses/:expenseId', protect, async (req, res) => {
                     actorUserId: req.user._id,
                     participants: participantsFromGroup(group),
                     title: `Expense updated: ${expense.description}`,
-                    details: diff,
+                    details: {
+                        ...diff,
+                        // snapshot after update for fields that may not be in diff
+                        amount: expense.amount,
+                        description: expense.description,
+                        payerId: String(expense.payer),
+                        participants: (expense.participants || []).map(p => String(p.user || p)),
+                        date: expense.date,
+                        groupName: group.name,
+                    },
                     req
                 });
             }

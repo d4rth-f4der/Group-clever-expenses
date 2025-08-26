@@ -1,3 +1,5 @@
+import { apiRequest } from '../../../api.js';
+
 export function renderExpenseCreate(log) {
   const { actorName, timestamp, details = {} } = log || {};
   const { description, amount, currency = 'UAH', payerName, participants = [], groupName } = details;
@@ -49,5 +51,19 @@ export function renderExpenseCreate(log) {
   wrap.appendChild(amountDiv);
   wrap.appendChild(partsLabel);
   wrap.appendChild(parts);
+
+  // Async resolve group name if it still looks like an ObjectId
+  const gid = String(log?.groupId || '').trim();
+  if (gid && /^([a-f\d]{24})$/i.test(gid) && (groupName === gid || !groupName)) {
+    (async () => {
+      try {
+        const groups = await apiRequest(`groups?ts=${Date.now()}`);
+        const found = (Array.isArray(groups) ? groups : []).find(g => String(g._id) === gid);
+        if (found && found.name) {
+          groupDiv.textContent = `Group: ${found.name}`;
+        }
+      } catch (_) { /* ignore */ }
+    })();
+  }
   return wrap;
 }
