@@ -3,41 +3,30 @@ export function renderExpenseUpdate(log) {
   const { description, changes = [] } = details;
 
   const wrap = document.createElement('div');
-  wrap.style.display = 'grid';
-  wrap.style.gap = '8px';
+  wrap.classList.add('history-wrap-8');
 
   const title = document.createElement('div');
-  title.style.fontWeight = '700';
-  title.style.color = '#111827';
+  title.classList.add('history-title');
   title.textContent = `Expense updated: ${description || '(no description)'}`;
 
   const meta = document.createElement('div');
-  meta.style.color = '#6B7280';
-  meta.style.fontSize = '12px';
+  meta.classList.add('history-meta');
   const ts = new Date(timestamp);
   meta.textContent = `${actorName || 'Unknown'} • ${isNaN(+ts) ? '' : ts.toLocaleString()}`;
 
   const list = document.createElement('div');
-  list.style.display = 'grid';
-  list.style.gap = '6px';
+  list.classList.add('history-list');
 
   (Array.isArray(changes) ? changes : []).forEach(ch => {
     const row = document.createElement('div');
-    row.style.display = 'grid';
-    row.style.gridTemplateColumns = '1fr';
-    row.style.gap = '2px';
-    row.style.padding = '8px';
-    row.style.border = '1px solid #e5e7eb';
-    row.style.borderRadius = '8px';
-    row.style.background = '#fff';
+    row.classList.add('history-card');
 
     const field = document.createElement('div');
-    field.style.fontWeight = '600';
+    field.classList.add('history-field');
     field.textContent = ch.field || 'field';
 
     const fromTo = document.createElement('div');
-    fromTo.style.fontSize = '12px';
-    fromTo.style.color = '#374151';
+    fromTo.classList.add('history-text-sm');
     const from = ch.from !== undefined ? JSON.stringify(ch.from) : '—';
     const to = ch.to !== undefined ? JSON.stringify(ch.to) : '—';
     fromTo.textContent = `${from} → ${to}`;
@@ -49,7 +38,7 @@ export function renderExpenseUpdate(log) {
 
   if (!list.childElementCount) {
     const empty = document.createElement('div');
-    empty.style.color = '#6B7280';
+    empty.classList.add('history-meta');
     empty.textContent = 'No change details provided.';
     list.appendChild(empty);
   }

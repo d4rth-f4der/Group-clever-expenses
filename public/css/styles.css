@@ -865,3 +865,63 @@ h1 {
 .participants-list .participant-tag:hover .participant-remove {
     opacity: 1;
 }
+
+/* ============================= */
+/* History default renderer base */
+/* ============================= */
+
+.history-wrap {
+    display: grid;
+    gap: 10px;
+}
+
+.history-title-sm {
+    font-weight: 600;
+    color: #111827;
+}
+
+.history-meta {
+    color: #6B7280;
+    font-size: 12px;
+}
+
+.history-pre {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ============================= */
+/* History item details (shared) */
+/* ============================= */
+
+.history-wrap-8 { display: grid; gap: 8px; }
+.history-title { font-weight: 700; color: #111827; }
+.history-label { color: #6b7280; }
+.history-text { color: #374151; }
+.history-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.history-chip {
+    background: #e5f0ff;
+    color: #1e3a8a;
+    padding: 4px 8px;
+    border-radius: 9999px;
+    font-size: 12px;
+    line-height: 1;
+    display: inline-block;
+}
+.history-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+}
+.history-field { font-weight: 600; }
+.history-text-sm { font-size: 12px; color: #374151; }
+.history-list { display: grid; gap: 6px; }
