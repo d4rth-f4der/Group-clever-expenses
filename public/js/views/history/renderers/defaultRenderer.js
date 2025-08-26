@@ -2,10 +2,6 @@ export function defaultRenderer(log) {
   const wrap = document.createElement('div');
   wrap.classList.add('history-wrap');
 
-  const heading = document.createElement('div');
-  heading.classList.add('history-title-sm');
-  heading.textContent = log?.title || log?.message || log?.action || 'History item';
-
   const meta = document.createElement('div');
   meta.classList.add('history-meta');
   const ts = new Date(log?.timestamp);
@@ -17,7 +13,6 @@ export function defaultRenderer(log) {
   details.classList.add('history-pre');
   details.textContent = JSON.stringify(log?.details ?? {}, null, 2);
 
-  wrap.appendChild(heading);
   wrap.appendChild(meta);
   wrap.appendChild(details);
   return wrap;

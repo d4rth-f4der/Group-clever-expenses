@@ -5,10 +5,6 @@ export function renderGroupDelete(log) {
   const wrap = document.createElement('div');
   wrap.classList.add('history-wrap-8');
 
-  const title = document.createElement('div');
-  title.classList.add('history-title');
-  title.textContent = `Group deleted: ${name || '(no name)'}`;
-
   const meta = document.createElement('div');
   meta.classList.add('history-meta');
   const ts = new Date(timestamp);
@@ -32,7 +28,6 @@ export function renderGroupDelete(log) {
   count.classList.add('history-text');
   count.textContent = `Expenses: ${typeof expensesCount === 'number' ? expensesCount : 'N/A'}`;
 
-  wrap.appendChild(title);
   wrap.appendChild(meta);
   wrap.appendChild(membersLabel);
   wrap.appendChild(members);

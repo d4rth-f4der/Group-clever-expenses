@@ -42,6 +42,7 @@ export const DOM = {
 
     // History Details Modal elements
     historyDetailsModal: document.getElementById('history-details-modal'),
+    historyDetailsTitle: document.getElementById('history-details-title'),
     closeHistoryDetailsBtn: document.getElementById('close-history-details-btn'),
     historyDetailsContent: document.getElementById('history-details-content'),
 };

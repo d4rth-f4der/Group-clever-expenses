@@ -14,6 +14,26 @@ const map = new Map([
   ['expense:update', renderExpenseUpdate],
 ]);
 
+export function buildHistoryTitle(log) {
+  const action = log?.action || '';
+  const d = log?.details || {};
+  const desc = d.description || log?.message || log?.title;
+  switch (action) {
+    case 'group:create':
+      return `Group created: ${d.name || '(no name)'}`;
+    case 'group:delete':
+      return `Group deleted: ${d.name || '(no name)'}`;
+    case 'expense:create':
+      return `Expense created: ${desc || '(no description)'}`;
+    case 'expense:delete':
+      return `Expense deleted: ${desc || '(no description)'}`;
+    case 'expense:update':
+      return `Expense updated: ${desc || '(no description)'}`;
+    default:
+      return log?.title || log?.message || action || 'History item';
+  }
+}
+
 export async function renderHistoryDetails(log) {
   const action = log?.action;
   const renderer = action && map.get(action);

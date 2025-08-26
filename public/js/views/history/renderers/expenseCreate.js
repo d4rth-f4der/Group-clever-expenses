@@ -5,10 +5,6 @@ export function renderExpenseCreate(log) {
   const wrap = document.createElement('div');
   wrap.classList.add('history-wrap-8');
 
-  const title = document.createElement('div');
-  title.classList.add('history-title');
-  title.textContent = `Expense created: ${description || '(no description)'}`;
-
   const meta = document.createElement('div');
   meta.classList.add('history-meta');
   const ts = new Date(timestamp);
@@ -33,7 +29,6 @@ export function renderExpenseCreate(log) {
     parts.appendChild(chip);
   });
 
-  wrap.appendChild(title);
   wrap.appendChild(meta);
   wrap.appendChild(pay);
   wrap.appendChild(partsLabel);

@@ -5,10 +5,6 @@ export function renderGroupCreate(log) {
   const wrap = document.createElement('div');
   wrap.classList.add('history-wrap-8');
 
-  const title = document.createElement('div');
-  title.classList.add('history-title');
-  title.textContent = `Group created: ${name || '(no name)'}`;
-
   const meta = document.createElement('div');
   meta.classList.add('history-meta');
   const ts = new Date(timestamp);
@@ -28,7 +24,6 @@ export function renderGroupCreate(log) {
     members.appendChild(chip);
   });
 
-  wrap.appendChild(title);
   wrap.appendChild(meta);
   wrap.appendChild(membersLabel);
   wrap.appendChild(members);
