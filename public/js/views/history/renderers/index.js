@@ -17,20 +17,21 @@ const map = new Map([
 export function buildHistoryTitle(log) {
   const action = log?.action || '';
   const d = log?.details || {};
-  const desc = d.description || log?.message || log?.title;
+  const rawDesc = d.description || log?.message || log?.title || '';
+  const strip = (text, pattern) => (typeof text === 'string' ? text.replace(pattern, '') : text);
   switch (action) {
     case 'group:create':
       return `Group created: ${d.name || '(no name)'}`;
     case 'group:delete':
       return `Group deleted: ${d.name || '(no name)'}`;
     case 'expense:create':
-      return `Expense created: ${desc || '(no description)'}`;
+      return `Expense created: ${strip(rawDesc, /^Expense created:\s*/i) || '(no description)'}`;
     case 'expense:delete':
-      return `Expense deleted: ${desc || '(no description)'}`;
+      return `Expense deleted: ${strip(rawDesc, /^Expense deleted:\s*/i) || '(no description)'}`;
     case 'expense:update':
-      return `Expense updated: ${desc || '(no description)'}`;
+      return `Expense updated: ${strip(rawDesc, /^Expense updated:\s*/i) || '(no description)'}`;
     default:
-      return log?.title || log?.message || action || 'History item';
+      return rawDesc || action || 'History item';
   }
 }
 
