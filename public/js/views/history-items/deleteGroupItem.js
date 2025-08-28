@@ -1,36 +1,54 @@
 import { enrichLogDetails } from '../history/enrich.js';
 
 export async function renderDeleteGroupItem(log) {
-  const whatHTML = (() => {
-    const rawTitle = log.title || log.message || 'Group deleted';
-    const idx = rawTitle.indexOf(':');
-    if (idx > -1) {
-      const a = rawTitle.slice(0, idx).trim();
-      const rest = rawTitle.slice(idx + 1).trim();
-      return `<span class="history-action">${a}:</span> ${rest}`;
-    }
-    return rawTitle;
-  })();
+  const actor = log?.actorName || log?.actor || 'Unknown';
+  let groupName = log?.details?.name || '';
 
-  const extras = [];
+  // Enrich for group name and participants
+  let participants = [];
   try {
     const d = await enrichLogDetails(log);
-    const parts = Array.isArray(d?.participants) ? d.participants : [];
-    if (parts.length) {
-      const membersWrap = document.createElement('div');
-      membersWrap.className = 'history-row-members';
-      const chips = document.createElement('div');
-      chips.className = 'history-chips';
-      parts.forEach(p => {
-        const chip = document.createElement('span');
-        chip.className = 'history-chip';
-        chip.textContent = (p.username || p.name || p).toString();
-        chips.appendChild(chip);
-      });
-      membersWrap.appendChild(chips);
-      extras.push(membersWrap);
-    }
+    groupName = groupName || d?.groupName || '';
+    participants = Array.isArray(d?.participants) ? d.participants : [];
   } catch (_) { /* ignore */ }
 
-  return { whatHTML, extras };
+  const safeGroup = groupName || '(no name)';
+  const whatHTML = `
+    <span class="history-row-obj">${actor}</span> 
+    <span class="history-verb-group-delete">deleted group</span> 
+    <span class="history-row-obj">${safeGroup}</span>
+  `;
+
+  const extras = [];
+
+  // Date/time line
+  const when = document.createElement('div');
+  when.className = 'history-meta';
+  const ts = new Date(log?.timestamp);
+  if (!isNaN(+ts)) {
+    const dateStr = ts.toLocaleDateString();
+    const timeStr = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    when.innerHTML = `<div>${dateStr}</div><div>${timeStr}</div>`;
+  } else {
+    when.textContent = '';
+  }
+  extras.push(when);
+
+  // Participants chips line
+  if (participants.length) {
+    const membersWrap = document.createElement('div');
+    membersWrap.className = 'history-row-members';
+    const chips = document.createElement('div');
+    chips.className = 'history-chips';
+    participants.forEach(p => {
+      const chip = document.createElement('span');
+      chip.className = 'history-chip';
+      chip.textContent = (p.username || p.name || p).toString();
+      chips.appendChild(chip);
+    });
+    membersWrap.appendChild(chips);
+    extras.push(membersWrap);
+  }
+
+  return { whatHTML, extras, overrideMeta: true };
 }

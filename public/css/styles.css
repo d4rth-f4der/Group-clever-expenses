@@ -934,69 +934,57 @@ h1 {
     grid-template-columns: 1fr auto;
     gap: 8px;
     padding: 8px 10px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #c7ccd6;
     border-radius: 8px;
     background: #fff;
     cursor: pointer;
+    align-items: baseline;
 }
 
-.history-row-who {
-    font-weight: 500;
-    color: #434646;
+.history-row:hover {
+    background: #f8f9fa;
 }
 
 .history-row-what {
-    color: #111827;
-    font-weight: 600;
+    color: #52555b;
+    font-weight: 100;
     font-size: 16px;
 }
 
-/* Lighter weight for action prefix and subline */
-.history-action { font-weight: 300; }
-.history-sub { font-weight: 300; }
+.history-row-obj {
+    font-weight: 600;
+    color: #3f4141;
+}
+
+.history-verb-group-create {
+    color: #2563eb;
+}
+
+.history-verb-group-delete {
+    color: #be2b72;
+}
+
+.history-verb-expense-create {
+    color: #099a59;
+}
+
+.history-verb-expense-delete {
+    color: #f25c48;
+}
+
+.history-verb-expense-update {
+    color: #dea335;
+}
 
 .history-row-right {
     color: #6B7280;
     font-size: 12px;
 }
 
-/* Actor line spans both columns on second row */
-.history-row-actor {
-    grid-column: 1 / -1;
-    margin-top: 2px;
-}
-
 .history-row-members {
     grid-column: 1 / -1;
 }
 
-/* Action color variants */
-.history-row--group-create { 
-    background-color: #f0f5fa;
-    border-color: #a2b8d6;
-}
-
-.history-row--group-delete { 
-    background-color: #eae1e3;
-    border-color: #ea7bc3;
-}
-
-.history-row--expense-create { 
-    background-color: #f2fef4;
-    border-color: #6fe7a9;
-}
-
-.history-row--expense-update {
-    background-color: #ffffe7;
-    border-color: #dad048;
-}
-
-.history-row--expense-delete {
-    background-color: #ffdfdb;
-    border-color: #da7260;
-}
-
-/* Loading and empty states for history list */
 .history-loading,
 .history-empty {
     color: #6B7280;

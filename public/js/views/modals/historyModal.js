@@ -13,20 +13,9 @@ export function toggleHistoryModal(show) {
   }
 }
 
-function actionClass(action) {
-  switch (action) {
-    case 'group:create': return 'history-row--group-create';
-    case 'group:delete': return 'history-row--group-delete';
-    case 'expense:create': return 'history-row--expense-create';
-    case 'expense:update': return 'history-row--expense-update';
-    case 'expense:delete': return 'history-row--expense-delete';
-    default: return '';
-  }
-}
-
 async function renderRow(log) {
   const row = document.createElement('div');
-  row.className = `history-row ${actionClass(log?.action)}`.trim();
+  row.className = 'history-row';
   row.addEventListener('click', () => openHistoryItemDetails(log));
 
   // First row: what happened (left) + timestamp (right)
@@ -46,12 +35,14 @@ async function renderRow(log) {
 
   // Delegate item-specific rendering to history-items renderers
   let extras = [];
+  let overrideMeta = false;
   const renderer = getHistoryItemRenderer(log?.action);
   if (renderer) {
     try {
       const res = await renderer(log);
       what.innerHTML = (res && res.whatHTML) ? res.whatHTML : mainHTML;
       if (res && Array.isArray(res.extras)) extras = res.extras;
+      if (res && res.overrideMeta) overrideMeta = true;
     } catch (_) {
       what.innerHTML = mainHTML;
     }
@@ -59,19 +50,31 @@ async function renderRow(log) {
     what.innerHTML = mainHTML;
   }
 
-  const right = document.createElement('div');
-  const ts = new Date(log.timestamp);
-  right.textContent = isNaN(+ts) ? '' : ts.toLocaleString();
-  right.className = 'history-row-right';
+  let right = null;
+  if (!overrideMeta) {
+    right = document.createElement('div');
+    const ts = new Date(log.timestamp);
+    if (!isNaN(+ts)) {
+      const dateStr = ts.toLocaleDateString();
+      const timeStr = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      right.innerHTML = `<div>${dateStr}</div><div>${timeStr}</div>`;
+    } else {
+      right.textContent = '';
+    }
+    right.className = 'history-row-right';
+  }
 
   // Second row: who (actor), spans both columns
-  const who = document.createElement('div');
-  who.textContent = log.actorName || log.actor || 'Unknown';
-  who.className = 'history-row-who history-row-actor';
+  let who = null;
+  if (!overrideMeta) {
+    who = document.createElement('div');
+    who.textContent = log.actorName || log.actor || 'Unknown';
+    who.className = 'history-row-who history-row-actor';
+  }
 
   row.appendChild(what);
-  row.appendChild(right);
-  row.appendChild(who);
+  if (right) row.appendChild(right);
+  if (who) row.appendChild(who);
   // Append any extras returned by per-item renderer after the actor row
   if (extras && extras.length) {
     extras.forEach(el => { if (el) row.appendChild(el); });

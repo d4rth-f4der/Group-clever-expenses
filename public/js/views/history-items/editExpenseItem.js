@@ -1,20 +1,41 @@
 import { enrichLogDetails } from '../history/enrich.js';
 
 export async function renderEditExpenseItem(log) {
-  const rawTitle = log.title || log.message || 'Expense updated';
-  const idx = rawTitle.indexOf(':');
-  const actionText = idx > -1 ? rawTitle.slice(0, idx).trim() : null;
-  const restText = idx > -1 ? rawTitle.slice(idx + 1).trim() : rawTitle;
+  const actor = log?.actorName || log?.actor || 'Unknown';
 
-  let whatHTML = actionText ? `<span class="history-action">${actionText}:</span> ${restText}` : restText;
+  let description = log?.details?.description || '';
+  let groupName = log?.details?.groupName || log?.details?.name || '';
 
+  // Enrich for description and group name
   try {
     const d = await enrichLogDetails(log);
-    const gName = (d?.groupName || '').toString().trim();
-    if (gName) {
-      whatHTML = `${whatHTML}<br><span class="history-sub">in group </span><span>${gName}</span>`;
-    }
+    description = description || d?.description || '';
+    groupName = groupName || d?.groupName || '';
   } catch (_) { /* ignore */ }
 
-  return { whatHTML };
+  const safeDesc = (description || '(no description)').toString();
+  const safeGroup = (groupName || '(no name)').toString();
+  const whatHTML = `
+    <span class="history-row-obj">${actor}</span> 
+    <span class="history-verb-expense-update">updated</span> 
+    <span class="history-row-obj">${safeDesc}</span> in 
+    <span class="history-row-obj">${safeGroup}</span>
+  `;
+
+  const extras = [];
+
+  // Date/time line
+  const when = document.createElement('div');
+  when.className = 'history-meta';
+  const ts = new Date(log?.timestamp);
+  if (!isNaN(+ts)) {
+    const dateStr = ts.toLocaleDateString();
+    const timeStr = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    when.innerHTML = `<div>${dateStr}</div><div>${timeStr}</div>`;
+  } else {
+    when.textContent = '';
+  }
+  extras.push(when);
+
+  return { whatHTML, extras, overrideMeta: true };
 }
