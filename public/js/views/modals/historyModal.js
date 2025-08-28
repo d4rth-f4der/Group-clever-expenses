@@ -1,7 +1,7 @@
 import { DOM } from '../../dom/domRefs.js';
 import { apiRequest } from '../../api.js';
 import { openHistoryItemDetails } from './historyDetailsModal.js';
-import { enrichLogDetails } from '../history/enrich.js';
+import { getHistoryItemRenderer } from '../history-items/index.js';
 
 export function toggleHistoryModal(show) {
   if (!DOM.historyModal) return;
@@ -44,19 +44,18 @@ async function renderRow(log) {
   }
   what.className = 'history-row-what';
 
-  // For expense actions, append group name on a new line
-  if (log?.action === 'expense:create' || log?.action === 'expense:update' || log?.action === 'expense:delete') {
+  // Delegate item-specific rendering to history-items renderers
+  let extras = [];
+  const renderer = getHistoryItemRenderer(log?.action);
+  if (renderer) {
     try {
-      const d = await enrichLogDetails(log);
-      const gName = (d?.groupName || '').toString().trim();
-      if (gName) {
-        what.innerHTML = `${mainHTML}<br><span class="history-sub">in group </span><span>${gName}</span>`;
-      } else {
-        what.innerHTML = mainHTML;
-      }
-    } catch (_) { /* ignore enrich errors */ }
+      const res = await renderer(log);
+      what.innerHTML = (res && res.whatHTML) ? res.whatHTML : mainHTML;
+      if (res && Array.isArray(res.extras)) extras = res.extras;
+    } catch (_) {
+      what.innerHTML = mainHTML;
+    }
   } else {
-    // non-expense: just main line
     what.innerHTML = mainHTML;
   }
 
@@ -73,31 +72,9 @@ async function renderRow(log) {
   row.appendChild(what);
   row.appendChild(right);
   row.appendChild(who);
-  // For group create/delete, show participants as chips (usernames) after the actor row
-  if (log?.action === 'group:create' || log?.action === 'group:delete') {
-    try {
-      const d = await enrichLogDetails(log);
-      const parts = Array.isArray(d?.participants) ? d.participants : [];
-      if (parts.length > 0) {
-        const membersWrap = document.createElement('div');
-        membersWrap.className = 'history-row-members';
-
-        const chips = document.createElement('div');
-        chips.className = 'history-chips';
-
-        parts.forEach(p => {
-          const chip = document.createElement('span');
-          chip.className = 'history-chip';
-          chip.textContent = (p.username || p.name || p).toString();
-          chips.appendChild(chip);
-        });
-
-        membersWrap.appendChild(chips);
-        row.appendChild(membersWrap);
-      }
-    } catch (_) {
-      // ignore enrich errors; show without chips
-    }
+  // Append any extras returned by per-item renderer after the actor row
+  if (extras && extras.length) {
+    extras.forEach(el => { if (el) row.appendChild(el); });
   }
   return row;
 }
