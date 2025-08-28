@@ -13,12 +13,34 @@ const groupRoutes = require('./routes/groupRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 const app = express();
+// use ('trust proxy', 1) for Render deploy only: //
+app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const CORS_ORIGIN = process.env.CORS_ORIGIN;
 
 app.disable('x-powered-by');
 app.use(helmet());
+
+// Settings of Content Security Policy
+app.use(
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'"],
+      // in next line 'unsafe-inline' is required for inline styles
+      "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      "font-src": ["'self'", "https://fonts.gstatic.com"],
+      "img-src": ["'self'", "data:"],
+      "connect-src": ["'self'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"], // для preconnect
+      "object-src": ["'none'"],
+      "base-uri": ["'self'"],
+      "frame-ancestors": ["'self'"]
+    }
+  })
+);
 
 // Body size limits
 app.use(express.json({ limit: '100kb' }));
