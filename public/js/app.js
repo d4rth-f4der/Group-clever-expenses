@@ -40,8 +40,20 @@ async function initializeApp() {
                 if (s.isLoggedIn && onGroups) DOM.historyBtn.classList.remove('hidden');
                 else DOM.historyBtn.classList.add('hidden');
             }
+            // Unified control for New Group button to avoid flashes during loading/modals
+            if (DOM.newGroupBtn) {
+                const onGroups = (window.location.pathname || '/') === '/';
+                const modalOpen = [DOM.addExpenseModal, DOM.expenseViewModal, DOM.newGroupModal]
+                  .some(m => m && !m.classList.contains('hidden'));
+                if (s.isLoggedIn && onGroups && !s.loading && !modalOpen) {
+                    DOM.newGroupBtn.classList.remove('hidden');
+                } else {
+                    DOM.newGroupBtn.classList.add('hidden');
+                }
+            }
         } catch (_) { }
     });
+
     // Initialize login state from token
     try {
         const token = localStorage.getItem('userToken');

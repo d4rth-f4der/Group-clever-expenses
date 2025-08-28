@@ -5,13 +5,11 @@ export function toggleUI(isLoggedIn) {
         DOM.loginContainer.classList.add('hidden');
         DOM.logoutBtn.classList.remove('hidden');
         DOM.groupsContainer.classList.remove('hidden');
-        DOM.newGroupBtn.classList.remove('hidden');
     } else {
         DOM.loginContainer.classList.remove('hidden');
         DOM.logoutBtn.classList.add('hidden');
         DOM.groupsContainer.classList.add('hidden');
         DOM.expenseDetailsContainer.classList.add('hidden');
-        DOM.newGroupBtn.classList.add('hidden');
         DOM.mainTitle.textContent = 'My Group Expenses';
     }
 }
