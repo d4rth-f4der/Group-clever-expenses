@@ -7,8 +7,10 @@ const { connectMongo, disconnectMongo } = require('./db/mongo');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const slowDown = require('express-slow-down');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
+const { errors: celebrateErrors } = require('celebrate');
 
 const authRoutes = require('./routes/authRoutes');
 const groupRoutes = require('./routes/groupRoutes');
@@ -107,9 +109,16 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+const authSlowdown = slowDown({
+  windowMs: 15 * 60 * 1000,
+  delayAfter: 10,
+  delayMs: 250,
+});
 app.use('/api', apiLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/resend-verification', authLimiter);
+app.use('/api/auth', authSlowdown);
 
 // Connect to Mongo with retries and logging
 (async () => {
@@ -141,6 +150,9 @@ app.get('/health', (req, res) => {
 });
 
 const listener = app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+
+// Celebrate validation error handler
+app.use(celebrateErrors());
 
 function shutdown(signal) {
   console.log(`\n${signal} received, shutting down ...`);

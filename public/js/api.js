@@ -1,5 +1,13 @@
 const API_URL = '';
 
+export async function register({ username, email, password }) {
+    return apiRequest('auth/register', 'POST', { username, email, password });
+}
+
+export async function resendVerification(email) {
+    return apiRequest('auth/resend-verification', 'POST', { email });
+}
+
 export async function findUserByName(username) {
     try {
         const response = await apiRequest(`users/${username}`);

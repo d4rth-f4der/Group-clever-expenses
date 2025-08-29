@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             required: true,
+        },
+        emailVerified: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: true }

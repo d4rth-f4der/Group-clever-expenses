@@ -3,7 +3,7 @@ import { toggleUI, toggleLoading, DOM, toggleModal, toggleExpenseViewModal, togg
 
 import { setState, getState, subscribe } from './state/store.js';
 import { initRouter, navigateToGroups, replaceToRoot } from './router/router.js';
-import { handleLogin, handleLogout } from './controllers/authController.js';
+import { handleLogin, handleLogout, handleRegister } from './controllers/authController.js';
 import { fetchGroups } from './controllers/groupsController.js';
 import { showGroupExpenses, handleAddExpense, handleDeleteExpense, handleSaveExpense, openAddExpenseModal } from './controllers/expensesController.js';
 import { showConfirm } from './utils/confirm.js';
@@ -61,6 +61,31 @@ async function initializeApp() {
     } catch (_) { }
 
     DOM.loginForm.addEventListener('submit', handleLogin);
+    if (DOM.signupForm) {
+        DOM.signupForm.addEventListener('submit', handleRegister);
+    }
+    if (DOM.signupLink) {
+        DOM.signupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            try { DOM.loginContainer.classList.add('hidden'); } catch (_) {}
+            try { DOM.signupContainer.classList.remove('hidden'); } catch (_) {}
+            try { clearInlineError(DOM.loginError); } catch (_) {}
+            try { clearInlineError(DOM.signupError); } catch (_) {}
+            const u = document.getElementById('signup-username');
+            if (u) u.focus();
+        });
+    }
+    if (DOM.loginLink) {
+        DOM.loginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            try { DOM.signupContainer.classList.add('hidden'); } catch (_) {}
+            try { DOM.loginContainer.classList.remove('hidden'); } catch (_) {}
+            try { clearInlineError(DOM.loginError); } catch (_) {}
+            try { clearInlineError(DOM.signupError); } catch (_) {}
+            const e1 = document.getElementById('email');
+            if (e1) e1.focus();
+        });
+    }
     DOM.logoutBtn.addEventListener('click', handleLogout);
 
     if (DOM.historyBtn) {
