@@ -24,6 +24,10 @@ const groupSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+// Indexes to speed up membership and admin lookups
+groupSchema.index({ members: 1 });
+groupSchema.index({ admin: 1 });
+
 const Group = mongoose.model('Group', groupSchema);
 
 module.exports = Group;

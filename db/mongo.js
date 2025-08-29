@@ -35,6 +35,12 @@ async function connectMongo(uri, opts = {}) {
   if (!uri) throw new Error('Mongo URI is required');
 
   mongoose.set('bufferCommands', false);
+  // Harden queries: drop unrecognized filters and sanitize $ operators in filters
+  // strictQuery helps avoid accidental broad queries; sanitizeFilter mitigates NoSQL injection
+  mongoose.set('strictQuery', true);
+  // Do NOT enable global sanitizeFilter because it breaks legitimate operators
+  // like `$in` used in server-side queries (e.g., User.find({_id: {$in: [...]}})).
+  // We rely on express-level sanitization instead.
 
   const options = { ...DEFAULTS, ...opts };
   const maxAttempts = options.maxAttempts ?? 7;

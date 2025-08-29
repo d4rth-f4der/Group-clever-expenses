@@ -7,6 +7,8 @@ const { connectMongo, disconnectMongo } = require('./db/mongo');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const hpp = require('hpp');
 
 const authRoutes = require('./routes/authRoutes');
 const groupRoutes = require('./routes/groupRoutes');
@@ -48,13 +50,30 @@ app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 // CORS
 if (CORS_ORIGIN) {
-  app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+  const origins = CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean);
+  app.use(cors({ origin: origins.length ? origins : CORS_ORIGIN, credentials: true }));
 } else {
   app.use(cors());
 }
 app.use(morgan('dev'));
 
 app.use(express.static('public'));
+
+// NoSQL injection & HTTP parameter pollution protection
+// express-mongo-sanitize's middleware reassigns req.query which is read-only in Express 5.
+// Use its sanitize() function directly to mutate objects in place.
+app.use((req, res, next) => {
+  try {
+    if (req.body) mongoSanitize.sanitize(req.body, { replaceWith: '_' });
+    if (req.params) mongoSanitize.sanitize(req.params, { replaceWith: '_' });
+    if (req.query && typeof req.query === 'object') mongoSanitize.sanitize(req.query, { replaceWith: '_' });
+  } catch (e) {
+    // Fail open: log and continue
+    console.warn('mongoSanitize error:', e);
+  }
+  next();
+});
+app.use(hpp());
 
 // Serve Flatpickr locally from node_modules to avoid external CDNs
 try {
@@ -90,6 +109,7 @@ const authLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Connect to Mongo with retries and logging
 (async () => {

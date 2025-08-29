@@ -64,6 +64,7 @@ router.get('/me/logs', protect, async (req, res) => {
         const logs = await ActionLog.find(q)
             .sort(sort)
             .limit(pageSize)
+            .maxTimeMS(5000)
             .populate({ path: 'actorUserId', select: 'username email' })
             .lean();
 

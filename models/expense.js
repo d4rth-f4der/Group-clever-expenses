@@ -37,6 +37,12 @@ const expenseSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+// Helpful indexes for common access patterns
+expenseSchema.index({ group: 1, date: -1, _id: -1 });
+expenseSchema.index({ payer: 1, date: -1 });
+expenseSchema.index({ 'participants.user': 1 });
+expenseSchema.index({ createdAt: -1 });
+
 const Expense = mongoose.model('Expense', expenseSchema);
 
 module.exports = Expense;

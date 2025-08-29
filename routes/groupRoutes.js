@@ -24,7 +24,8 @@ router.post('/', protect, async (req, res) => {
     const uniqueMembers = new Set(members.map(String));
     uniqueMembers.add(String(req.user._id));
 
-    const existingMembers = await User.find({ '_id': { $in: Array.from(uniqueMembers) } }).select('_id');
+    const memberObjectIds = Array.from(uniqueMembers).map(id => new mongoose.Types.ObjectId(String(id)));
+    const existingMembers = await User.find({ _id: { $in: memberObjectIds } }).select('_id');
     if (existingMembers.length !== uniqueMembers.size) {
         return res.status(400).json({ message: "Some of provided member IDs invalid" });
     }
@@ -80,7 +81,8 @@ router.post('/:groupId/expenses', protect, async (req, res) => {
         return res.status(400).json({ message: 'Invalid groupId' });
     }
 
-    if (!description || amount <= 0 || !payer || !participants || !Array.isArray(participants) || participants.length === 0) {
+    const numAmount = Number(amount);
+    if (!description || !isFinite(numAmount) || numAmount <= 0 || !payer || !participants || !Array.isArray(participants) || participants.length === 0) {
         return res.status(400).json({ message: 'Mandatory: description, amount, payer, participant(s)' });
     }
 
@@ -110,7 +112,7 @@ router.post('/:groupId/expenses', protect, async (req, res) => {
 
         const expense = await Expense.create({
             description,
-            amount,
+            amount: numAmount,
             group: groupId,
             payer,
             participants: participants.map(pId => ({ user: pId })),
@@ -183,6 +185,7 @@ router.get('/:groupId/expenses', protect, async (req, res) => {
 
         const expenses = await Expense.find({ group: groupId })
             .sort({ date: -1, _id: -1 })
+            .maxTimeMS(5000)
             .populate('payer', 'username email')
             .populate('participants.user', 'username email');
 
