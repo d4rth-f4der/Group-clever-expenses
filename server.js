@@ -86,6 +86,38 @@ try {
   // console.warn('flatpickr not installed; run npm i flatpickr');
 }
 
+// Serve Zod ESM locally so the browser can import it without a bundler
+try {
+  const fs = require('fs');
+  const zodNodeModulesPath = path.join(process.cwd(), 'node_modules', 'zod');
+  const zodPkgJsonPath = path.join(zodNodeModulesPath, 'package.json');
+  const exists = fs.existsSync(zodNodeModulesPath);
+  if (exists) {
+    app.use('/vendor/zod', express.static(zodNodeModulesPath));
+    let esmCandidatePaths = [
+      path.join(zodNodeModulesPath, 'lib', 'index.mjs'),
+      path.join(zodNodeModulesPath, 'esm', 'index.mjs'),
+      path.join(zodNodeModulesPath, 'index.mjs'),
+    ];
+    try {
+      const pkg = JSON.parse(fs.readFileSync(zodPkgJsonPath, 'utf8'));
+      if (pkg && pkg.module) esmCandidatePaths.unshift(path.join(zodNodeModulesPath, pkg.module));
+    } catch (_) {}
+    const chosen = esmCandidatePaths.find(p => fs.existsSync(p));
+    if (chosen) {
+      console.info('[zod] serving ESM at /vendor/zod/index.mjs ->', chosen);
+      app.get('/vendor/zod/index.mjs', (req, res) => res.sendFile(chosen));
+      app.get('/vendor/zod/lib/index.mjs', (req, res) => res.sendFile(chosen));
+    } else {
+      console.warn('[zod] No ESM entry found among candidates. Client import will 404.');
+    }
+  } else {
+    console.warn('[zod] zod not found in node_modules. Client import will 404.');
+  }
+} catch (e) {
+  console.warn('[zod] setup error:', e?.message || e);
+}
+
 // Required ENV validation
 if (!MONGO_URI) {
   console.error('Missing MONGO_URI env variable');

@@ -4,6 +4,7 @@ import { setState } from '../state/store.js';
 import { navigateToGroups, replaceToRoot } from '../router/router.js';
 import { DOM } from '../ui.js';
 import { showInlineError, clearInlineError } from '../utils/notify.js';
+import { loginSchema, signupSchema } from '../validation/auth.js';
 
 export async function handleLogin(e) {
   e.preventDefault();
@@ -12,9 +13,11 @@ export async function handleLogin(e) {
 
   try {
     clearInlineError(DOM.loginError);
-    // Basic client validation instead of native popups (novalidate)
-    if (!email || !password) {
-      showInlineError(DOM.loginError, 'Email and password are required.');
+    // Zod validation for immediate UX feedback
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const msg = parsed.error.issues?.[0]?.message || 'Invalid input';
+      showInlineError(DOM.loginError, msg);
       return;
     }
     const data = await apiRequest('auth/login', 'POST', { email, password });
@@ -44,22 +47,11 @@ export async function handleRegister(e) {
   const confirm = document.getElementById('signup-confirm')?.value || '';
 
   clearInlineError(DOM.signupError);
-
-  // Basic client-side validation mirroring backend rules
-  if (!username || !email || !password || !confirm) {
-    showInlineError(DOM.signupError, 'All fields are required.');
-    return;
-  }
-  if (password !== confirm) {
-    showInlineError(DOM.signupError, 'Passwords do not match.');
-    return;
-  }
-  if (username.length < 3 || username.length > 32 || !/^[a-z0-9_.-]+$/i.test(username)) {
-    showInlineError(DOM.signupError, 'Username must be 3-32 chars: letters, numbers, _ . -');
-    return;
-  }
-  if (password.length < 8) {
-    showInlineError(DOM.signupError, 'Password must be at least 8 characters.');
+  // Zod client-side validation mirroring backend rules
+  const parsed = signupSchema.safeParse({ username, email, password, confirm });
+  if (!parsed.success) {
+    const msg = parsed.error.issues?.[0]?.message || 'Invalid input';
+    showInlineError(DOM.signupError, msg);
     return;
   }
 
