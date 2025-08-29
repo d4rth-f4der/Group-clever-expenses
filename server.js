@@ -112,7 +112,8 @@ const authLimiter = rateLimit({
 const authSlowdown = slowDown({
   windowMs: 15 * 60 * 1000,
   delayAfter: 10,
-  delayMs: 250,
+  // express-slow-down v2 requires delayMs to be a function for the new behavior
+  delayMs: () => 250,
 });
 app.use('/api', apiLimiter);
 app.use('/api/auth/login', authLimiter);
