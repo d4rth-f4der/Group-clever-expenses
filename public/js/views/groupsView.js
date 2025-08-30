@@ -16,15 +16,19 @@ export function renderGroups(groups) {
         const item = document.createElement('div');
         item.className = 'expense-item group-item';
         item.dataset.groupId = group._id;
+        // Build static structure without injecting untrusted HTML
         item.innerHTML = `
             <div class="expense-main">
-                <div class="expense-description">${group.name}</div>
+                <div class="expense-description"></div>
             </div>
             <div class="expense-details" style="margin-top:6px;">
                 <div class="label" style="margin-right:8px;">Members:</div>
                 <div class="expense-participants group-members"></div>
             </div>
         `;
+        // Safely set user-controlled text
+        const nameEl = item.querySelector('.expense-description');
+        if (nameEl) nameEl.textContent = group.name || '';
 
         const membersWrap = item.querySelector('.group-members');
         (group.members || []).forEach(m => {

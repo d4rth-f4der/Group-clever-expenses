@@ -2,6 +2,7 @@ import { DOM } from '../../dom/domRefs.js';
 import { apiRequest } from '../../api.js';
 import { openHistoryItemDetails } from './historyDetailsModal.js';
 import { getHistoryItemRenderer } from '../history-items/index.js';
+import { escapeHTML } from '../../utils/escape.js';
 
 export function toggleHistoryModal(show) {
   if (!DOM.historyModal) return;
@@ -25,11 +26,11 @@ async function renderRow(log) {
   let mainHTML = '';
   const colonIdx = rawTitle.indexOf(':');
   if (colonIdx > -1) {
-    const actionText = rawTitle.slice(0, colonIdx).trim();
-    const restText = rawTitle.slice(colonIdx + 1).trim();
+    const actionText = escapeHTML(rawTitle.slice(0, colonIdx).trim());
+    const restText = escapeHTML(rawTitle.slice(colonIdx + 1).trim());
     mainHTML = `<span class="history-action">${actionText}:</span> ${restText}`;
   } else {
-    mainHTML = rawTitle;
+    mainHTML = escapeHTML(rawTitle);
   }
   what.className = 'history-row-what';
 
@@ -85,7 +86,11 @@ async function renderRow(log) {
 export async function openHistoryModal() {
   try {
     if (DOM.historyList) {
-      DOM.historyList.innerHTML = '<div class="history-loading">Loading...</div>';
+      const loading = document.createElement('div');
+      loading.className = 'history-loading';
+      loading.textContent = 'Loading...';
+      DOM.historyList.innerHTML = '';
+      DOM.historyList.appendChild(loading);
     }
     toggleHistoryModal(true);
     const res = await apiRequest('users/me/logs');
@@ -105,7 +110,11 @@ export async function openHistoryModal() {
     }
   } catch (e) {
     if (DOM.historyList) {
-      DOM.historyList.innerHTML = `<div class="inline-error">${e?.message || 'Failed to load history'}</div>`;
+      const err = document.createElement('div');
+      err.className = 'inline-error';
+      err.textContent = e?.message || 'Failed to load history';
+      DOM.historyList.innerHTML = '';
+      DOM.historyList.appendChild(err);
     }
   }
 }

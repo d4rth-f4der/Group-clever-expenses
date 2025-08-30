@@ -1,4 +1,5 @@
 import { enrichLogDetails } from '../history/enrich.js';
+import { escapeHTML } from '../../utils/escape.js';
 
 export async function renderCreateGroupItem(log) {
   const actor = log?.actorName || log?.actor || 'Unknown';
@@ -12,9 +13,10 @@ export async function renderCreateGroupItem(log) {
     participants = Array.isArray(d?.participants) ? d.participants : [];
   } catch (_) { /* ignore */ }
 
-  const safeGroup = groupName || '(no name)';
+  const safeActor = escapeHTML(actor);
+  const safeGroup = escapeHTML(groupName || '(no name)');
   const whatHTML = `
-    <span class="history-row-obj">${actor}</span> 
+    <span class="history-row-obj">${safeActor}</span> 
     <span class="history-verb-group-create">created group</span> 
     <span class="history-row-obj">${safeGroup}</span>
   `;

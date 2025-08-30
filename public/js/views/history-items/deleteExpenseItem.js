@@ -1,4 +1,5 @@
 import { enrichLogDetails } from '../history/enrich.js';
+import { escapeHTML } from '../../utils/escape.js';
 
 export async function renderDeleteExpenseItem(log) {
   const actor = log?.actorName || log?.actor || 'Unknown';
@@ -13,10 +14,11 @@ export async function renderDeleteExpenseItem(log) {
     groupName = groupName || d?.groupName || '';
   } catch (_) { /* ignore */ }
 
-  const safeDesc = (description || '(no description)').toString();
-  const safeGroup = (groupName || '(no name)').toString();
+  const safeActor = escapeHTML(actor);
+  const safeDesc = escapeHTML(description || '(no description)');
+  const safeGroup = escapeHTML(groupName || '(no name)');
   const whatHTML = `
-    <span class="history-row-obj">${actor}</span> 
+    <span class="history-row-obj">${safeActor}</span> 
     <span class="history-verb-expense-delete">deleted</span> 
     <span class="history-row-obj">${safeDesc}</span> in 
     <span class="history-row-obj">${safeGroup}</span>

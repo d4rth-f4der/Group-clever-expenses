@@ -1,5 +1,6 @@
 import { DOM } from '../dom/domRefs.js';
 import { toggleExpenseViewModal } from './modals/expenseViewModal.js';
+import { escapeHTML } from '../utils/escape.js';
 
 export function renderGroupDetails(groupName, expenses, transactions, groupMembers = [], adminId) {
     DOM.mainTitle.textContent = `"${groupName}" Group Expenses`;
@@ -15,7 +16,7 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
         return `
             <li class="expense-item" data-expense-index="${index}" style="cursor: pointer;">
                 <div class="expense-main">
-                    <span class="expense-description">${expense.description}</span>
+                    <span class="expense-description">${escapeHTML(expense.description)}</span>
                     <div class="expense-right">
                         <span class="expense-date">${formattedDate} ${formattedTime}</span>
                         <span class="expense-amount">${expense.amount} hrn.</span>
@@ -28,13 +29,13 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
                             const isPayer = String(p.user._id) === String(expense.payer._id);
                             return `
                                 <span class="participant-wrapper">
-                                    <span class="username participant-username${isPayer ? ' payer-username' : ''}">${p.user.username}</span>
+                                    <span class="username participant-username${isPayer ? ' payer-username' : ''}">${escapeHTML(p.user.username)}</span>
                                     ${isPayer ? '<span class="paid-caption" aria-label="paid by">paid</span>' : ''}
                                 </span>
                             `;
                         }).join('')}
                     </span>
-                    ${payerInShared ? '' : `<span class="expense-payer"><span class="label">paid by</span> <span class="username participant-username payer-username-standalone">${expense.payer.username}</span></span>`}
+                    ${payerInShared ? '' : `<span class="expense-payer"><span class="label">paid by</span> <span class="username participant-username payer-username-standalone">${escapeHTML(expense.payer.username)}</span></span>`}
                 </div>
             </li>
         `;
@@ -42,7 +43,7 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
 
     const transactionsHtml = transactions.map(t => `
         <li class="transaction-item">
-            <span class="username participant-username">${t.from.username}</span> owes <span class="username participant-username">${t.to.username}</span> ${t.amount.toFixed(2)} hrn.
+            <span class="username participant-username">${escapeHTML(t.from.username)}</span> owes <span class="username participant-username">${escapeHTML(t.to.username)}</span> ${t.amount.toFixed(2)} hrn.
         </li>
     `).join('');
 
@@ -55,7 +56,7 @@ export function renderGroupDetails(groupName, expenses, transactions, groupMembe
                     const isAdmin = String(m._id) === String(adminId);
                     return `
                         <span class="participant-wrapper">
-                            <span class="username participant-username${isAdmin ? ' admin-username' : ''}">${m.username}</span>
+                            <span class="username participant-username${isAdmin ? ' admin-username' : ''}">${escapeHTML(m.username)}</span>
                             ${isAdmin ? '<span class="admin-caption" aria-label="admin">admin</span>' : ''}
                         </span>
                     `;

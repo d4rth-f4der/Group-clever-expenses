@@ -14,7 +14,11 @@ export function toggleHistoryDetailsModal(show) {
 
 export async function openHistoryItemDetails(log) {
   if (!DOM.historyDetailsContent) return;
-  DOM.historyDetailsContent.innerHTML = '<div style="color:#6B7280;">Loading...<\/div>';
+  const loadingDiv = document.createElement('div');
+  loadingDiv.style.color = '#6B7280';
+  loadingDiv.textContent = 'Loading...';
+  DOM.historyDetailsContent.innerHTML = '';
+  DOM.historyDetailsContent.appendChild(loadingDiv);
   toggleHistoryDetailsModal(true);
   try {
     if (DOM.historyDetailsTitle) {
@@ -24,7 +28,11 @@ export async function openHistoryItemDetails(log) {
     DOM.historyDetailsContent.innerHTML = '';
     DOM.historyDetailsContent.appendChild(content);
   } catch (e) {
-    DOM.historyDetailsContent.innerHTML = `<div class="inline-error">${e?.message || 'Failed to render details'}<\/div>`;
+    const err = document.createElement('div');
+    err.className = 'inline-error';
+    err.textContent = e?.message || 'Failed to render details';
+    DOM.historyDetailsContent.innerHTML = '';
+    DOM.historyDetailsContent.appendChild(err);
   }
 }
 
