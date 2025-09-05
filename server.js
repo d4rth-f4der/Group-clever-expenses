@@ -35,7 +35,7 @@ app.use(
     directives: {
       "default-src": ["'self'"],
       "script-src": ["'self'"],
-      // in next line 'unsafe-inline' is required for inline styles
+      // in next line 'unsafe-inline' is required for inline styles SHOULD BE REMOVED IN PROD
       "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       "font-src": ["'self'", "https://fonts.gstatic.com"],
       "img-src": ["'self'", "data:"],
