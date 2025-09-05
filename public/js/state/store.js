@@ -3,7 +3,8 @@
 const listeners = new Set();
 
 const state = {
-  isLoggedIn: false,
+  // Use null so the first explicit set to true/false triggers listeners
+  isLoggedIn: null,
   loading: false,
 };
 

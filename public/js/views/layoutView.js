@@ -5,12 +5,15 @@ export function toggleUI(isLoggedIn) {
         DOM.loginContainer.classList.add('hidden');
         DOM.logoutBtn.classList.remove('hidden');
         DOM.groupsContainer.classList.remove('hidden');
+        try { DOM.mainTitle.classList.remove('hidden'); } catch (_) {}
+        try { DOM.mainTitle.textContent = 'My Group Expenses'; } catch (_) {}
     } else {
         DOM.loginContainer.classList.remove('hidden');
         DOM.logoutBtn.classList.add('hidden');
         DOM.groupsContainer.classList.add('hidden');
         DOM.expenseDetailsContainer.classList.add('hidden');
-        DOM.mainTitle.textContent = 'My Group Expenses';
+        // Hide main title on auth screens to avoid visual leftovers
+        try { DOM.mainTitle.classList.add('hidden'); } catch (_) {}
     }
 }
 

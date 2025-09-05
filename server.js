@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const morgan = require('morgan');
 const path = require('path');
+const compression = require('compression');
 const { connectMongo, disconnectMongo } = require('./db/mongo');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -57,7 +58,10 @@ if (CORS_ORIGIN) {
 } else {
   app.use(cors());
 }
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Enable gzip/deflate compression for responses
+app.use(compression());
 
 app.use(express.static('public'));
 
@@ -176,6 +180,17 @@ app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/views/index.html');
+});
+
+// SPA fallback routes: serve index.html for client-side routes
+// Specific known client route
+app.get('/groups/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
+});
+
+// General fallback for non-API, non-asset routes
+app.get(/^\/(?!api\/|vendor\/|css\/|js\/|health$).*$/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
 app.get('/health', (req, res) => {
